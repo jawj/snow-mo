@@ -1,9 +1,14 @@
 (function() {
   var __slice = Array.prototype.slice;
   $(function() {
-    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, down, flake, flakes, i, kvp, last, moved, params, paused, projector, randInRange, renderer, scene, sd, setSize, speed, stats, sx, sy, twoPi, updateCamPos, v, verticesFromSVGPaths, windSpeed, windT, _i, _len, _ref;
+    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, down, flake, flakes, i, kvp, last, moved, params, paused, projector, randInRange, renderer, scene, sd, setSize, speed, stats, sx, sy, testCanvas, twoPi, updateCamPos, v, verticesFromSVGPaths, windSpeed, windT, _i, _len, _ref;
+    testCanvas = document.createElement('canvas');
+    if (!(window.WebGLRenderingContext && (testCanvas.getContext('webgl') || testCanvas.getContext('experimental-webgl')))) {
+      $('#noWebGL').show();
+      return;
+    }
     params = {
-      flakes: 100,
+      flakes: 150,
       speed: 1,
       linewidth: 1,
       stats: 0,
@@ -246,6 +251,9 @@
     animate = function(t) {
       var dt, flake, wind, _j, _len2;
       dt = (t - last) * speed;
+      if (dt > 1000) {
+        dt = 30;
+      }
       wind = windT.t(0, windSpeed);
       if (!paused) {
         for (_j = 0, _len2 = flakes.length; _j < _len2; _j++) {

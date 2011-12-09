@@ -1,6 +1,11 @@
 $ ->
+  testCanvas = document.createElement('canvas')
+  unless window.WebGLRenderingContext and (testCanvas.getContext('webgl') or testCanvas.getContext('experimental-webgl'))
+    $('#noWebGL').show()
+    return
+  
   params = 
-    flakes:    100
+    flakes:    150
     speed:     1
     linewidth: 1
     stats:     0
@@ -16,7 +21,7 @@ $ ->
     range[0] + Math.random() * (range[1] - range[0])
     
   verticesFromSVGPaths = (svg, t = new Transform()) ->  
-    # extracts simple line paths, limited to M (move), L (line) and Z (close) commands, from an SVG
+    # hackily extracts simple line paths, limited to M (move), L (line) and Z (close) commands, from an SVG
     # creates a 2D vertex sequence, using any transformation passed in
     # NB. SVG paths must be double-, not single-quoted
     ds = []; re = /d\s*=\s*"([^"]+)"/g; ds.push(matches[1]) while (matches = re.exec(svg))?
@@ -159,6 +164,7 @@ $ ->
   
   animate = (t) ->
     dt = (t - last) * speed
+    dt = 30 if dt > 1000  # e.g. if someone switched away and then back to this tab
     wind = windT.t(0, windSpeed)
     if not paused
       flake.tick(dt, wind) for flake in flakes
