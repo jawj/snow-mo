@@ -4,7 +4,7 @@ $ ->
     return
   
   params = 
-    flakes:    150
+    flakes:    125
     speed:     1
     linewidth: 1
     stats:     0
@@ -118,11 +118,11 @@ $ ->
         @line.geometry.__dirtyVertices = yes
       @reset() if pos.y < @yRange[1]
         
-    click: -> 
+    click: (ev) ->
       if @rootFrag
-        @explodingness = 1
+        @explodingness = if ev.shiftKey then -1 else 1
       else
-        window.open('http://casa.ucl.ac.uk')
+        window.open('http://casa.ucl.ac.uk', 'casa')
   
   $('#creditOuter').hide() unless params.credits
   if params.stats
@@ -197,17 +197,17 @@ $ ->
         ev.preventDefault()
       when 27  # Esc
         for flake in flakes
-          flake.click() if flake.rootFrag
+          flake.click(ev) if flake.rootFrag
         ev.preventDefault()
         
   $(window).on 'click', (ev) ->
-    return if moved
+    return if moved > 3  # number of mousemove events, threshold for deciding user meant to drag not click
     vector = new THREE.Vector3((ev.clientX / window.innerWidth) * 2 - 1, - (ev.clientY / window.innerHeight) * 2 + 1, 0.5)
     projector.unprojectVector(vector, camera)
     ray = new THREE.Ray(camera.position, vector.subSelf(camera.position).normalize())
-    meshMaterial = null  # new THREE.MeshBasicMaterial(0xaaaaaa)  # no material needed, since never rendered
+    meshMaterial = null  # new THREE.MeshBasicMaterial(0xaaaaaa)  # material needed only for debugging, since never normally rendered
     meshes = for flake in flakes
-      mesh = new THREE.Mesh(new THREE.PlaneGeometry(flake.size * 0.66, flake.size * 0.66), meshMaterial)  
+      mesh = new THREE.Mesh(new THREE.PlaneGeometry(flake.size * 0.66, flake.size * 0.66), meshMaterial)
       mesh.doubleSided = yes
       mesh.position = flake.line.position
       mesh.rotation = flake.line.rotation
@@ -218,22 +218,25 @@ $ ->
     intersects = ray.intersectObjects(meshes)
     if intersects.length
       flake = intersects[0].object.flake
-      flake.click()
+      flake.click(ev)
     scene.remove(mesh) for mesh in meshes
     renderer.render(scene, camera) if paused  # otherwise selection not visible    
   
   $(window).on 'mouseup', -> down = no
-  $(window).on 'mousedown', (ev) -> down = yes; moved = no; sx = ev.clientX; sy = ev.clientY
+  $(window).on 'mousedown', (ev) -> 
+    down = yes
+    moved = 0
+    sx = ev.clientX; sy = ev.clientY
   $(window).on 'mousemove', (ev) ->
     windSpeed = (ev.clientX / window.innerWidth - 0.5) * 0.125
     if down
-      moved = yes
-      dx = ev.clientX - sx
+      moved += 1
+      dx = ev.clientX - sx; dy = ev.clientY - sy
       rotation = dx * -0.003
       camT.rotate(rotation)
       windT.rotate(rotation)
       updateCamPos()
-      sx += dx      
+      sx += dx; sy += dy
   
   $(window).on 'mousewheel', (e, d, dX, dY) ->
     camZ -= dY * 5

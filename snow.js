@@ -7,7 +7,7 @@
       return;
     }
     params = {
-      flakes: 150,
+      flakes: 125,
       speed: 1,
       linewidth: 1,
       stats: 0,
@@ -196,11 +196,11 @@
           return this.reset();
         }
       };
-      Flake.prototype.click = function() {
+      Flake.prototype.click = function(ev) {
         if (this.rootFrag) {
-          return this.explodingness = 1;
+          return this.explodingness = ev.shiftKey ? -1 : 1;
         } else {
-          return window.open('http://casa.ucl.ac.uk');
+          return window.open('http://casa.ucl.ac.uk', 'casa');
         }
       };
       return Flake;
@@ -296,7 +296,7 @@
           for (_j = 0, _len2 = flakes.length; _j < _len2; _j++) {
             flake = flakes[_j];
             if (flake.rootFrag) {
-              flake.click();
+              flake.click(ev);
             }
           }
           return ev.preventDefault();
@@ -304,7 +304,7 @@
     });
     $(window).on('click', function(ev) {
       var flake, intersects, mesh, meshMaterial, meshes, ray, vector, _j, _len2;
-      if (moved) {
+      if (moved > 3) {
         return;
       }
       vector = new THREE.Vector3((ev.clientX / window.innerWidth) * 2 - 1, -(ev.clientY / window.innerHeight) * 2 + 1, 0.5);
@@ -330,7 +330,7 @@
       intersects = ray.intersectObjects(meshes);
       if (intersects.length) {
         flake = intersects[0].object.flake;
-        flake.click();
+        flake.click(ev);
       }
       for (_j = 0, _len2 = meshes.length; _j < _len2; _j++) {
         mesh = meshes[_j];
@@ -345,21 +345,23 @@
     });
     $(window).on('mousedown', function(ev) {
       down = true;
-      moved = false;
+      moved = 0;
       sx = ev.clientX;
       return sy = ev.clientY;
     });
     $(window).on('mousemove', function(ev) {
-      var dx, rotation;
+      var dx, dy, rotation;
       windSpeed = (ev.clientX / window.innerWidth - 0.5) * 0.125;
       if (down) {
-        moved = true;
+        moved += 1;
         dx = ev.clientX - sx;
+        dy = ev.clientY - sy;
         rotation = dx * -0.003;
         camT.rotate(rotation);
         windT.rotate(rotation);
         updateCamPos();
-        return sx += dx;
+        sx += dx;
+        return sy += dy;
       }
     });
     return $(window).on('mousewheel', function(e, d, dX, dY) {
