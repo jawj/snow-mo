@@ -90,7 +90,7 @@ $ ->
       maxLevel = if Math.random() < 0.4 then 3 else 2
       if Math.random() < 0.5 / params.flakes
         @rootFrag = null
-        @size = 60
+        @size = 60  # ready to be multiplied by 0.66 later...
       else 
         @rootFrag = new FlakeFrag(maxLevel)
         @size = @scale * (maxLevel + 1) * 2
