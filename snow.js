@@ -198,7 +198,7 @@
       };
       Flake.prototype.click = function(ev) {
         if (this.rootFrag) {
-          return this.explodingness = ev.shiftKey ? -1 : 1;
+          return this.explodingness = this.explodingness === 1 ? -1 : 1;
         } else {
           return window.open('http://casa.ucl.ac.uk', 'casa');
         }

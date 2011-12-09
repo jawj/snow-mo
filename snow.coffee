@@ -120,7 +120,7 @@ $ ->
         
     click: (ev) ->
       if @rootFrag
-        @explodingness = if ev.shiftKey then -1 else 1
+        @explodingness = if @explodingness == 1 then -1 else 1
       else
         window.open('http://casa.ucl.ac.uk', 'casa')
   
