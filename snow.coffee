@@ -216,7 +216,7 @@ $ ->
   $(window).on 'mouseup', -> down = no
   $(window).on 'mousedown', (ev) -> down = yes; moved = no; sx = ev.clientX; sy = ev.clientY
   $(window).on 'mousemove', (ev) ->
-    windSpeed = (ev.clientX / window.innerWidth - 0.5) * 0.1
+    windSpeed = (ev.clientX / window.innerWidth - 0.5) * 0.125
     if down
       moved = yes
       dx = ev.clientX - sx

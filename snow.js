@@ -340,7 +340,7 @@
     });
     $(window).on('mousemove', function(ev) {
       var dx, rotation;
-      windSpeed = (ev.clientX / window.innerWidth - 0.5) * 0.1;
+      windSpeed = (ev.clientX / window.innerWidth - 0.5) * 0.125;
       if (down) {
         moved = true;
         dx = ev.clientX - sx;

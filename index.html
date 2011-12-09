@@ -1373,7 +1373,7 @@ a.style.width="1px",a.style.height=Math.random()*30+"px",a.style.cssFloat="left"
     });
     $(window).on('mousemove', function(ev) {
       var dx, rotation;
-      windSpeed = (ev.clientX / window.innerWidth - 0.5) * 0.1;
+      windSpeed = (ev.clientX / window.innerWidth - 0.5) * 0.15;
       if (down) {
         moved = true;
         dx = ev.clientX - sx;
