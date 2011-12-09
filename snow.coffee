@@ -70,15 +70,15 @@ $ ->
           @_vertices(vertices, t, explodeness)
       vertices
       
-    _vertices: (vertices, t, explodeness) ->
+    _vertices: (vertices, priorT, explodeness) ->
       for kid in @kids
-        t2 = t.dup()
-        t2.translate(@x + explodeness, @y + explodeness)
-        c = t2.t(0, 0)
+        t = priorT.dup()
+        t.translate(@x + explodeness, @y + explodeness)
+        c = t.t(0, 0)
         vertices.push(v(c[0], c[1], 0))
-        c = t2.t(kid.x, kid.y)
+        c = t.t(kid.x, kid.y)
         vertices.push(v(c[0], c[1], 0))
-        kid._vertices(vertices, t2, explodeness)
+        kid._vertices(vertices, t, explodeness)
   
   class Flake
     lineMaterial: new THREE.LineBasicMaterial(color: 0xffffff, linewidth: params.linewidth)
@@ -181,10 +181,9 @@ $ ->
     wind = windT.t(0, windSpeed)
     if not paused
       flake.tick(dt, wind) for flake in flakes
-    if down or not paused
-      renderer.clear()
-      camera.lookAt(scene.position)
-      renderer.render(scene, camera)
+    renderer.clear()
+    camera.lookAt(scene.position)
+    renderer.render(scene, camera)
     last = t
     window.requestAnimationFrame(animate, renderer.domElement)
     stats.update() if params.stats

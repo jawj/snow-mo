@@ -117,19 +117,19 @@
         }
         return vertices;
       };
-      FlakeFrag.prototype._vertices = function(vertices, t, explodeness) {
-        var c, kid, t2, _j, _len2, _ref2, _results;
+      FlakeFrag.prototype._vertices = function(vertices, priorT, explodeness) {
+        var c, kid, t, _j, _len2, _ref2, _results;
         _ref2 = this.kids;
         _results = [];
         for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
           kid = _ref2[_j];
-          t2 = t.dup();
-          t2.translate(this.x + explodeness, this.y + explodeness);
-          c = t2.t(0, 0);
+          t = priorT.dup();
+          t.translate(this.x + explodeness, this.y + explodeness);
+          c = t.t(0, 0);
           vertices.push(v(c[0], c[1], 0));
-          c = t2.t(kid.x, kid.y);
+          c = t.t(kid.x, kid.y);
           vertices.push(v(c[0], c[1], 0));
-          _results.push(kid._vertices(vertices, t2, explodeness));
+          _results.push(kid._vertices(vertices, t, explodeness));
         }
         return _results;
       };
@@ -276,11 +276,9 @@
           flake.tick(dt, wind);
         }
       }
-      if (down || !paused) {
-        renderer.clear();
-        camera.lookAt(scene.position);
-        renderer.render(scene, camera);
-      }
+      renderer.clear();
+      camera.lookAt(scene.position);
+      renderer.render(scene, camera);
       last = t;
       window.requestAnimationFrame(animate, renderer.domElement);
       if (params.stats) {
