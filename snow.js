@@ -164,10 +164,10 @@
         maxLevel = Math.random() < 0.4 ? 3 : 2;
         if (Math.random() < 0.5 / params.flakes) {
           this.rootFrag = null;
-          this.size = 60;
+          this.size = 40;
         } else {
           this.rootFrag = new FlakeFrag(maxLevel);
-          this.size = this.scale * (maxLevel + 1) * 2;
+          this.size = 0.67 * this.scale * (maxLevel + 1) * 2;
         }
         this.explodingness = this.explodedness = 0;
         geom = new THREE.Geometry();
@@ -308,7 +308,7 @@
       }
     });
     $(window).on('click', function(ev) {
-      var flake, intersects, mesh, meshMaterial, meshes, ray, vector, _j, _len2;
+      var flake, intersects, mesh, meshMaterial, meshes, ray, vector, _j, _len2, _results;
       if (moved > 3) {
         return;
       }
@@ -321,7 +321,7 @@
         _results = [];
         for (_j = 0, _len2 = flakes.length; _j < _len2; _j++) {
           flake = flakes[_j];
-          mesh = new THREE.Mesh(new THREE.PlaneGeometry(flake.size * 0.66, flake.size * 0.66), meshMaterial);
+          mesh = new THREE.Mesh(new THREE.PlaneGeometry(flake.size, flake.size), meshMaterial);
           mesh.doubleSided = true;
           mesh.position = flake.line.position;
           mesh.rotation = flake.line.rotation;
@@ -337,13 +337,12 @@
         flake = intersects[0].object.flake;
         flake.click(ev);
       }
+      _results = [];
       for (_j = 0, _len2 = meshes.length; _j < _len2; _j++) {
         mesh = meshes[_j];
-        scene.remove(mesh);
+        _results.push(scene.remove(mesh));
       }
-      if (paused) {
-        return renderer.render(scene, camera);
-      }
+      return _results;
     });
     $(window).on('mouseup', function() {
       return down = false;

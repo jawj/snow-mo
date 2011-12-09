@@ -96,10 +96,10 @@ $ ->
       maxLevel = if Math.random() < 0.4 then 3 else 2
       if Math.random() < 0.5 / params.flakes
         @rootFrag = null
-        @size = 60  # ready to be multiplied by 0.66 later...
+        @size = 40
       else 
         @rootFrag = new FlakeFrag(maxLevel)
-        @size = @scale * (maxLevel + 1) * 2
+        @size = 0.67 * @scale * (maxLevel + 1) * 2  # 0.67 is a best guess -- reflecting that flakes won't generally fill their bounds
       @explodingness = @explodedness = 0
       geom = new THREE.Geometry()
       geom.vertices = if @rootFrag then @rootFrag.vertices(@scale) else @logo
@@ -210,9 +210,9 @@ $ ->
     vector = new THREE.Vector3((ev.clientX / window.innerWidth) * 2 - 1, - (ev.clientY / window.innerHeight) * 2 + 1, 0.5)
     projector.unprojectVector(vector, camera)
     ray = new THREE.Ray(camera.position, vector.subSelf(camera.position).normalize())
-    meshMaterial = null  # new THREE.MeshBasicMaterial(0xaaaaaa)  # material needed only for debugging, since never normally rendered
+    meshMaterial = null  # new THREE.MeshBasicMaterial(0x888888)  # material needed only for debugging, since never normally rendered
     meshes = for flake in flakes
-      mesh = new THREE.Mesh(new THREE.PlaneGeometry(flake.size * 0.66, flake.size * 0.66), meshMaterial)
+      mesh = new THREE.Mesh(new THREE.PlaneGeometry(flake.size, flake.size), meshMaterial)
       mesh.doubleSided = yes
       mesh.position = flake.line.position
       mesh.rotation = flake.line.rotation
@@ -225,7 +225,6 @@ $ ->
       flake = intersects[0].object.flake
       flake.click(ev)
     scene.remove(mesh) for mesh in meshes
-    renderer.render(scene, camera) if paused  # otherwise selection not visible    
   
   $(window).on 'mouseup', -> down = no
   $(window).on 'mousedown', (ev) -> 

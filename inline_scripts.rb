@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# bring all local scripts inline, minifying where necessary
+
 html = open('source.html') { |f| f.read }
 html.gsub!(%r{<script src="[^/"]+"></script>}) do |tag|
   js = tag.match(/(?<=").+(?=")/)[0]
