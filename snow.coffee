@@ -1,6 +1,5 @@
 $ ->
-  testCanvas = document.createElement('canvas')
-  unless window.WebGLRenderingContext and (testCanvas.getContext('webgl') or testCanvas.getContext('experimental-webgl'))
+  unless window.WebGLRenderingContext and document.createElement('canvas').getContext('experimental-webgl')
     $('#noWebGL').show()
     return
   

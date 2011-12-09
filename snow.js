@@ -1,9 +1,8 @@
 (function() {
   var __slice = Array.prototype.slice;
   $(function() {
-    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, down, flake, flakes, i, kvp, last, moved, params, paused, projector, randInRange, renderer, scene, sd, setSize, speed, stats, sx, sy, testCanvas, twoPi, updateCamPos, v, verticesFromSVGPaths, windSpeed, windT, _i, _len, _ref;
-    testCanvas = document.createElement('canvas');
-    if (!(window.WebGLRenderingContext && (testCanvas.getContext('webgl') || testCanvas.getContext('experimental-webgl')))) {
+    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, down, flake, flakes, i, kvp, last, moved, params, paused, projector, randInRange, renderer, scene, sd, setSize, speed, stats, sx, sy, twoPi, updateCamPos, v, verticesFromSVGPaths, windSpeed, windT, _i, _len, _ref;
+    if (!(window.WebGLRenderingContext && document.createElement('canvas').getContext('experimental-webgl'))) {
       $('#noWebGL').show();
       return;
     }
