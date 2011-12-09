@@ -1,7 +1,7 @@
 (function() {
   var __slice = Array.prototype.slice;
   $(function() {
-    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, down, flake, flakes, i, kvp, last, moved, params, paused, projector, randInRange, renderer, scene, sd, setSize, speed, stats, sx, sy, twoPi, updateCamPos, v, verticesFromSVGPaths, windSpeed, windT, _i, _len, _ref;
+    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, down, flake, flakes, i, kvp, last, moved, params, paused, projector, randInRange, renderer, scene, sd, setSize, speed, stats, sx, sy, tp, twoPi, updateCamPos, v, verticesFromSVGPaths, windSpeed, windT, _i, _len, _ref;
     if (!(window.WebGLRenderingContext && document.createElement('canvas').getContext('experimental-webgl'))) {
       $('#noWebGL').show();
       return;
@@ -18,6 +18,14 @@
       kvp = _ref[_i];
       params[kvp.split('=')[0]] = parseInt(kvp.split('=')[1]);
     }
+    tp = Transform.prototype;
+    tp.t = tp.transformPoint;
+    tp.dup = function() {
+      var dup;
+      dup = new Transform();
+      dup.m = this.m.slice(0);
+      return dup;
+    };
     twoPi = Math.PI * 2;
     v = function(x, y, z) {
       return new THREE.Vertex(new THREE.Vector3(x, y, z));
@@ -96,7 +104,7 @@
           explodeness = 0;
         }
         vertices = [];
-        t = new TStack();
+        t = new Transform();
         t.scale(scale, scale);
         _ref2 = [1, -1];
         for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
@@ -110,19 +118,18 @@
         return vertices;
       };
       FlakeFrag.prototype._vertices = function(vertices, t, explodeness) {
-        var c, kid, _j, _len2, _ref2, _results;
+        var c, kid, t2, _j, _len2, _ref2, _results;
         _ref2 = this.kids;
         _results = [];
         for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
           kid = _ref2[_j];
-          t.save();
-          t.translate(this.x + explodeness, this.y + explodeness);
-          c = t.t(0, 0);
+          t2 = t.dup();
+          t2.translate(this.x + explodeness, this.y + explodeness);
+          c = t2.t(0, 0);
           vertices.push(v(c[0], c[1], 0));
-          c = t.t(kid.x, kid.y);
+          c = t2.t(kid.x, kid.y);
           vertices.push(v(c[0], c[1], 0));
-          kid._vertices(vertices, t, explodeness);
-          _results.push(t.restore());
+          _results.push(kid._vertices(vertices, t2, explodeness));
         }
         return _results;
       };

@@ -11,6 +11,13 @@ $ ->
     credits:   1
   (params[kvp.split('=')[0]] = parseInt(kvp.split('=')[1])) for kvp in location.search.substring(1).split('&')
   
+  tp = Transform.prototype
+  tp.t = tp.transformPoint  # shortcut
+  tp.dup = ->
+    dup = new Transform()
+    dup.m = @m[0..]
+    dup
+  
   twoPi = Math.PI * 2
   v = (x,y,z) -> new THREE.Vertex(new THREE.Vector3(x, y, z))
   
@@ -54,7 +61,7 @@ $ ->
          
     vertices: (scale, explodeness = 0) ->
       vertices = []
-      t = new TStack()
+      t = new Transform()
       t.scale(scale, scale)
       for j in [1, -1]
         t.scale(1, j)
@@ -65,14 +72,13 @@ $ ->
       
     _vertices: (vertices, t, explodeness) ->
       for kid in @kids
-        t.save()
-        t.translate(@x + explodeness, @y + explodeness)
-        c = t.t(0, 0)
+        t2 = t.dup()
+        t2.translate(@x + explodeness, @y + explodeness)
+        c = t2.t(0, 0)
         vertices.push(v(c[0], c[1], 0))
-        c = t.t(kid.x, kid.y)
+        c = t2.t(kid.x, kid.y)
         vertices.push(v(c[0], c[1], 0))
-        kid._vertices(vertices, t, explodeness)
-        t.restore()
+        kid._vertices(vertices, t2, explodeness)
   
   class Flake
     lineMaterial: new THREE.LineBasicMaterial(color: 0xffffff, linewidth: params.linewidth)
