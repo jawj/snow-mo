@@ -1188,8 +1188,13 @@ a.style.width="1px",a.style.height=Math.random()*30+"px",a.style.cssFloat="left"
         }
         this.scale = randInRange(3, 6);
         maxLevel = Math.random() < 0.4 ? 3 : 2;
-        this.size = this.scale * (maxLevel + 1) * 2;
-        this.rootFrag = Math.random() < 0.5 / params.flakes ? null : new FlakeFrag(maxLevel);
+        if (Math.random() < 0.5 / params.flakes) {
+          this.rootFrag = null;
+          this.size = 60;
+        } else {
+          this.rootFrag = new FlakeFrag(maxLevel);
+          this.size = this.scale * (maxLevel + 1) * 2;
+        }
         this.explodingness = this.explodedness = 0;
         geom = new THREE.Geometry();
         geom.vertices = this.rootFrag ? this.rootFrag.vertices(this.scale) : this.logo;
@@ -1225,7 +1230,11 @@ a.style.width="1px",a.style.height=Math.random()*30+"px",a.style.cssFloat="left"
         }
       };
       Flake.prototype.click = function() {
-        return this.explodingness = 1;
+        if (this.rootFrag) {
+          return this.explodingness = 1;
+        } else {
+          return window.open('http://casa.ucl.ac.uk');
+        }
       };
       return Flake;
     })();
@@ -1319,25 +1328,28 @@ a.style.width="1px",a.style.height=Math.random()*30+"px",a.style.cssFloat="left"
         case 27:
           for (_j = 0, _len2 = flakes.length; _j < _len2; _j++) {
             flake = flakes[_j];
-            flake.click();
+            if (flake.rootFrag) {
+              flake.click();
+            }
           }
           return ev.preventDefault();
       }
     });
     $(window).on('click', function(ev) {
-      var flake, intersects, mesh, meshes, ray, vector, _j, _len2;
+      var flake, intersects, mesh, meshMaterial, meshes, ray, vector, _j, _len2;
       if (moved) {
         return;
       }
       vector = new THREE.Vector3((ev.clientX / window.innerWidth) * 2 - 1, -(ev.clientY / window.innerHeight) * 2 + 1, 0.5);
       projector.unprojectVector(vector, camera);
       ray = new THREE.Ray(camera.position, vector.subSelf(camera.position).normalize());
+      meshMaterial = null;
       meshes = (function() {
         var _j, _len2, _results;
         _results = [];
         for (_j = 0, _len2 = flakes.length; _j < _len2; _j++) {
           flake = flakes[_j];
-          mesh = new THREE.Mesh(new THREE.PlaneGeometry(flake.size * 0.66, flake.size * 0.66), null);
+          mesh = new THREE.Mesh(new THREE.PlaneGeometry(flake.size * 0.66, flake.size * 0.66), meshMaterial);
           mesh.doubleSided = true;
           mesh.position = flake.line.position;
           mesh.rotation = flake.line.rotation;

@@ -14,12 +14,12 @@ $ ->
   twoPi = Math.PI * 2
   v = (x,y,z) -> new THREE.Vertex(new THREE.Vector3(x, y, z))
   
-  randInRange = (range...) ->  
+  randInRange = (range...) ->
     # accepts either 2 numeric args -- min, max -- or one array arg -- [min, max]
     range = range[0] unless typeof(range[0]) == 'number'
     range[0] + Math.random() * (range[1] - range[0])
     
-  verticesFromSVGPaths = (svg, t = new Transform()) ->  
+  verticesFromSVGPaths = (svg, t = new Transform()) ->
     # hackily extracts simple line paths, limited to M (move), L (line) and Z (close) commands, from an SVG
     # creates a 2D vertex sequence, using any transformation passed in
     # NB. SVG paths must be double-, not single-quoted
@@ -88,8 +88,12 @@ $ ->
       scene.remove(@line) if @line  # always need a new object, not just __dirtyVertices = yes, because length may have changed (https://github.com/mrdoob/three.js/wiki/Updates)
       @scale = randInRange(3, 6)
       maxLevel = if Math.random() < 0.4 then 3 else 2
-      @size = @scale * (maxLevel + 1) * 2
-      @rootFrag = if Math.random() < 0.5 / params.flakes then null else new FlakeFrag(maxLevel)
+      if Math.random() < 0.5 / params.flakes
+        @rootFrag = null
+        @size = 60
+      else 
+        @rootFrag = new FlakeFrag(maxLevel)
+        @size = @scale * (maxLevel + 1) * 2
       @explodingness = @explodedness = 0
       geom = new THREE.Geometry()
       geom.vertices = if @rootFrag then @rootFrag.vertices(@scale) else @logo
@@ -114,7 +118,11 @@ $ ->
         @line.geometry.__dirtyVertices = yes
       @reset() if pos.y < @yRange[1]
         
-    click: -> @explodingness = 1
+    click: -> 
+      if @rootFrag
+        @explodingness = 1
+      else
+        window.open('http://casa.ucl.ac.uk')
   
   $('#creditOuter').hide() unless params.credits
   if params.stats
@@ -188,7 +196,8 @@ $ ->
         paused = not paused
         ev.preventDefault()
       when 27  # Esc
-        flake.click() for flake in flakes
+        for flake in flakes
+          flake.click() if flake.rootFrag
         ev.preventDefault()
         
   $(window).on 'click', (ev) ->
@@ -196,8 +205,9 @@ $ ->
     vector = new THREE.Vector3((ev.clientX / window.innerWidth) * 2 - 1, - (ev.clientY / window.innerHeight) * 2 + 1, 0.5)
     projector.unprojectVector(vector, camera)
     ray = new THREE.Ray(camera.position, vector.subSelf(camera.position).normalize())
+    meshMaterial = null  # new THREE.MeshBasicMaterial(0xaaaaaa)  # no material needed, since never rendered
     meshes = for flake in flakes
-      mesh = new THREE.Mesh(new THREE.PlaneGeometry(flake.size * 0.66, flake.size * 0.66), null)  # no material needed, since never rendered
+      mesh = new THREE.Mesh(new THREE.PlaneGeometry(flake.size * 0.66, flake.size * 0.66), meshMaterial)  
       mesh.doubleSided = yes
       mesh.position = flake.line.position
       mesh.rotation = flake.line.rotation
