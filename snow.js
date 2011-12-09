@@ -279,7 +279,7 @@
       var flake, _j, _len2;
       switch (ev.keyCode) {
         case 32:
-          speed = speed === params.speed ? params.speed * 2 : params.speed;
+          speed = speed === params.speed ? params.speed * 3 : params.speed;
           return ev.preventDefault();
         case 80:
           paused = !paused;

@@ -183,7 +183,7 @@ $ ->
   $(document).on 'keyup', (ev) ->
     switch ev.keyCode
       when 32  # space
-        speed = if speed == params.speed then params.speed * 2 else params.speed
+        speed = if speed == params.speed then params.speed * 3 else params.speed
         ev.preventDefault()
       when 80  # P
         paused = not paused
