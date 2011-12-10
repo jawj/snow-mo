@@ -18,8 +18,8 @@
       kvp = _ref[_i];
       params[kvp.split('=')[0]] = parseInt(kvp.split('=')[1]);
     }
-    if (!params.credits) {
-      $('#creditOuter').hide();
+    if (params.credits) {
+      $('#creditOuter').show();
     }
     if (params.stats) {
       stats = new Stats();

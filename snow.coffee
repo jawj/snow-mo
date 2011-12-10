@@ -12,7 +12,7 @@ $ ->
     credits:   1
   (params[kvp.split('=')[0]] = parseInt(kvp.split('=')[1])) for kvp in location.search.substring(1).split('&')
   
-  $('#creditOuter').hide() unless params.credits
+  $('#creditOuter').show() if params.credits
   if params.stats
     stats = new Stats()
     stats.domElement.id = 'stats'
