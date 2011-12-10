@@ -11,12 +11,11 @@ $ ->
     credits:   1
   (params[kvp.split('=')[0]] = parseInt(kvp.split('=')[1])) for kvp in location.search.substring(1).split('&')
   
-  tp = Transform.prototype
-  tp.t = tp.transformPoint  # shortcut
-  tp.dup = ->
-    dup = new Transform()
-    dup.m = @m[0..]
-    dup
+  Transform = (source) ->  # redefine to allow for a source to duplicate in constructor
+    if source then this.m = source.m[0..] else @reset()
+    null  # because CoffeeScript inserts returns, and in the first case this screws us
+  (Transform::[fname] = func) for fname, func of window.Transform::  # copy across the methods
+  Transform::t = Transform::transformPoint  # shortcut
   
   twoPi = Math.PI * 2
   v = (x,y,z) -> new THREE.Vertex(new THREE.Vector3(x, y, z))
@@ -72,7 +71,7 @@ $ ->
       
     _vertices: (vertices, priorT, explodeness) ->
       for kid in @kids
-        t = priorT.dup()
+        t = new Transform(priorT)
         t.translate(@x + explodeness, @y + explodeness)
         c = t.t(0, 0)
         vertices.push(v(c[0], c[1], 0))
@@ -126,7 +125,7 @@ $ ->
         
     click: (ev) ->
       if @rootFrag
-        @explodingness = if @explodingness == 1 then -1 else 1
+        @explodingness = if ev.shiftKey then -1 else 1
       else
         window.open('http://casa.ucl.ac.uk', 'casa')
   

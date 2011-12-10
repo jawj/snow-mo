@@ -1,7 +1,7 @@
 (function() {
   var __slice = Array.prototype.slice;
   $(function() {
-    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, down, flake, flakes, i, kvp, last, moved, params, paused, projector, randInRange, renderer, scene, sd, setSize, speed, stats, sx, sy, tp, twoPi, updateCamPos, v, verticesFromSVGPaths, windSpeed, windT, _i, _len, _ref;
+    var Flake, FlakeFrag, Transform, animate, camT, camZ, camZRange, camera, down, flake, flakes, fname, func, i, kvp, last, moved, params, paused, projector, randInRange, renderer, scene, sd, setSize, speed, stats, sx, sy, twoPi, updateCamPos, v, verticesFromSVGPaths, windSpeed, windT, _i, _len, _ref, _ref2;
     if (!(window.WebGLRenderingContext && document.createElement('canvas').getContext('experimental-webgl'))) {
       $('#noWebGL').show();
       return;
@@ -18,14 +18,20 @@
       kvp = _ref[_i];
       params[kvp.split('=')[0]] = parseInt(kvp.split('=')[1]);
     }
-    tp = Transform.prototype;
-    tp.t = tp.transformPoint;
-    tp.dup = function() {
-      var dup;
-      dup = new Transform();
-      dup.m = this.m.slice(0);
-      return dup;
+    Transform = function(source) {
+      if (source) {
+        this.m = source.m.slice(0);
+      } else {
+        this.reset();
+      }
+      return null;
     };
+    _ref2 = window.Transform.prototype;
+    for (fname in _ref2) {
+      func = _ref2[fname];
+      Transform.prototype[fname] = func;
+    }
+    Transform.prototype.t = Transform.prototype.transformPoint;
     twoPi = Math.PI * 2;
     v = function(x, y, z) {
       return new THREE.Vertex(new THREE.Vector3(x, y, z));
@@ -85,13 +91,13 @@
         this.x = level === 0 ? 0 : Math.random();
         this.y = level === 0 ? 0 : Math.random();
         this.kids = (function() {
-          var _ref2, _results;
+          var _ref3, _results;
           if (level >= maxLevel) {
             return [];
           } else {
             extraKids = level === 0 ? 0 : 2;
             _results = [];
-            for (i = 0, _ref2 = randInRange(0, extraKids) + 1; 0 <= _ref2 ? i <= _ref2 : i >= _ref2; 0 <= _ref2 ? i++ : i--) {
+            for (i = 0, _ref3 = randInRange(0, extraKids) + 1; 0 <= _ref3 ? i <= _ref3 : i >= _ref3; 0 <= _ref3 ? i++ : i--) {
               _results.push(new FlakeFrag(maxLevel, level + 1));
             }
             return _results;
@@ -99,16 +105,16 @@
         })();
       }
       FlakeFrag.prototype.vertices = function(scale, explodeness) {
-        var i, j, t, vertices, _j, _len2, _ref2;
+        var i, j, t, vertices, _j, _len2, _ref3;
         if (explodeness == null) {
           explodeness = 0;
         }
         vertices = [];
         t = new Transform();
         t.scale(scale, scale);
-        _ref2 = [1, -1];
-        for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
-          j = _ref2[_j];
+        _ref3 = [1, -1];
+        for (_j = 0, _len2 = _ref3.length; _j < _len2; _j++) {
+          j = _ref3[_j];
           t.scale(1, j);
           for (i = 0; i <= 5; i++) {
             t.rotate(Math.PI / 3);
@@ -118,12 +124,12 @@
         return vertices;
       };
       FlakeFrag.prototype._vertices = function(vertices, priorT, explodeness) {
-        var c, kid, t, _j, _len2, _ref2, _results;
-        _ref2 = this.kids;
+        var c, kid, t, _j, _len2, _ref3, _results;
+        _ref3 = this.kids;
         _results = [];
-        for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
-          kid = _ref2[_j];
-          t = priorT.dup();
+        for (_j = 0, _len2 = _ref3.length; _j < _len2; _j++) {
+          kid = _ref3[_j];
+          t = new Transform(priorT);
           t.translate(this.x + explodeness, this.y + explodeness);
           c = t.t(0, 0);
           vertices.push(v(c[0], c[1], 0));
@@ -205,7 +211,7 @@
       };
       Flake.prototype.click = function(ev) {
         if (this.rootFrag) {
-          return this.explodingness = this.explodingness === 1 ? -1 : 1;
+          return this.explodingness = ev.shiftKey ? -1 : 1;
         } else {
           return window.open('http://casa.ucl.ac.uk', 'casa');
         }
@@ -240,9 +246,9 @@
     scene.fog = new THREE.FogExp2(0x000022, 0.00265);
     projector = new THREE.Projector();
     flakes = flakes = (function() {
-      var _ref2, _results;
+      var _ref3, _results;
       _results = [];
-      for (i = 0, _ref2 = params.flakes; 0 <= _ref2 ? i < _ref2 : i > _ref2; 0 <= _ref2 ? i++ : i--) {
+      for (i = 0, _ref3 = params.flakes; 0 <= _ref3 ? i < _ref3 : i > _ref3; 0 <= _ref3 ? i++ : i--) {
         flake = new Flake();
         flake.line.position.y = randInRange(flake.yRange);
         _results.push(flake);
@@ -260,8 +266,8 @@
     speed = params.speed;
     windSpeed = 0;
     updateCamPos = function() {
-      var _ref2;
-      return _ref2 = camT.t(0, camZ), camera.position.x = _ref2[0], camera.position.z = _ref2[1], _ref2;
+      var _ref3;
+      return _ref3 = camT.t(0, camZ), camera.position.x = _ref3[0], camera.position.z = _ref3[1], _ref3;
     };
     animate = function(t) {
       var dt, flake, wind, _j, _len2;
