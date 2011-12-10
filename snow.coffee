@@ -1,5 +1,6 @@
 $ ->
   unless window.WebGLRenderingContext and document.createElement('canvas').getContext('experimental-webgl')
+    # no point testing for plain 'webgl' context, because Three.js doesn't
     $('#noWebGL').show()
     return
   
@@ -11,12 +12,13 @@ $ ->
     credits:   1
   (params[kvp.split('=')[0]] = parseInt(kvp.split('=')[1])) for kvp in location.search.substring(1).split('&')
   
-  Transform = (source) ->  # redefine to allow for a source to duplicate in constructor
-    if source then this.m = source.m[0..] else @reset()
-    null  # because CoffeeScript inserts returns, and in the first case this screws us
-  (Transform::[fname] = func) for fname, func of window.Transform::  # copy across the methods
-  Transform::t = Transform::transformPoint  # shortcut
+  $('#creditOuter').hide() unless params.credits
+  if params.stats
+    stats = new Stats()
+    stats.domElement.id = 'stats'
+    document.body.appendChild(stats.domElement)
   
+  Transform::t = Transform::transformPoint  # shortcut
   twoPi = Math.PI * 2
   v = (x,y,z) -> new THREE.Vertex(new THREE.Vector3(x, y, z))
   
@@ -27,9 +29,7 @@ $ ->
     
   verticesFromSVGPaths = (svg, t = new Transform()) ->
     # hackily extracts simple line paths, limited to M (move), L (line) and Z (close) commands, from an SVG
-    # creates a 2D vertex sequence, using any transformation passed in
-    # NB. SVG paths must be double-, not single-quoted
-    ds = []; re = /d\s*=\s*"([^"]+)"/g; ds.push(matches[1]) while (matches = re.exec(svg))?
+    ds = []; re = /d\s*=\s*("|')([^"']+)("|')/g; ds.push(matches[2]) while (matches = re.exec(svg))?
     vertices = []
     for d in ds
       re = /([M|L])\s+(-?[0-9.]+)\s+(-?[0-9.]+)|Z\s+/g
@@ -39,10 +39,8 @@ $ ->
         if cmd == 'M'
           x0 = x1 = x; y0 = y1 = y
         else 
-          if cmd == 'L'
-            x2 = x; y2 = y
-          else  # Z
-            x2 = x0; y2 = y0
+          if cmd == 'L' then x2 = x; y2 = y
+          else x2 = x0; y2 = y0  # Z
           c1 = t.t(x1, y1); c2 = t.t(x2, y2)
           vertices.push(v(c1[0], c1[1], 0), v(c2[0], c2[1], 0))
           x1 = x2; y1 = y2
@@ -69,15 +67,15 @@ $ ->
           @_vertices(vertices, t, explodeness)
       vertices
       
-    _vertices: (vertices, priorT, explodeness) ->
+    _vertices: (vertices, t, explodeness) ->
+      t.translate(@x + explodeness, @y + explodeness)
       for kid in @kids
-        t = new Transform(priorT)
-        t.translate(@x + explodeness, @y + explodeness)
         c = t.t(0, 0)
         vertices.push(v(c[0], c[1], 0))
         c = t.t(kid.x, kid.y)
         vertices.push(v(c[0], c[1], 0))
         kid._vertices(vertices, t, explodeness)
+      t.translate(-@x - explodeness, -@y - explodeness)
   
   class Flake
     lineMaterial: new THREE.LineBasicMaterial(color: 0xffffff, linewidth: params.linewidth)
@@ -102,7 +100,7 @@ $ ->
       @explodingness = @explodedness = 0
       geom = new THREE.Geometry()
       geom.vertices = if @rootFrag then @rootFrag.vertices(@scale) else @logo
-      geom.vertices.push(v(-5, 0, 0), v(5, 0, 0), v(0, -5, 0), v(0, 5, 0)) if showOrigin
+      geom.vertices.push(v(-5, 0, 0), v(5, 0, 0), v(0, -5, 0), v(0, 5, 0)) if showOrigin  # for debugging
       @line = new THREE.Line(geom, @lineMaterial, THREE.LinePieces)
       @line.position = new THREE.Vector3(randInRange(@xRange), @yRange[0], randInRange(@zRange))
       @line.rotation = new THREE.Vector3(randInRange(0, twoPi), randInRange(0, twoPi), randInRange(0, twoPi))
@@ -115,8 +113,7 @@ $ ->
       pos.x += vel.x * dt + wind[0]; pos.y += vel.y * dt; pos.z += vel.z * dt + wind[1]
       rot = @line.rotation; rly = @rotality
       rot.x += rly.x * dt; rot.y += rly.y * dt; rot.z += rly.z * dt
-      # @line.position.add(@line.position, @velocity.clone().multiplyScalar(dt))  # above is perhaps faster
-      # @line.rotation.add(@line.rotation, @rotality.clone().multiplyScalar(dt))
+      # could use Vector3 add/clone/multiplyScalar methods -- but the above is probably faster
       if @rootFrag and @explodingness != 0
         @explodedness += @explodingness * @explodeSpeed * dt
         @line.geometry.vertices = @rootFrag.vertices(@scale, @explodedness)
@@ -128,15 +125,7 @@ $ ->
         @explodingness = if ev.shiftKey then -1 else 1
       else
         window.open('http://casa.ucl.ac.uk', 'casa')
-  
-  $('#creditOuter').hide() unless params.credits
-  if params.stats
-    stats = new Stats()
-    sd = stats.domElement
-    sd.style.position = 'absolute'
-    sd.style.bottom = '0px'
-    document.body.appendChild(sd)
-  
+
   renderer = new THREE.WebGLRenderer(antialias: true)
   camera = new THREE.PerspectiveCamera(33, 1, 1, 10000)  # aspect (2nd param) shortly to be overridden...
   
