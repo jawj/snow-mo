@@ -102,26 +102,29 @@
         })();
       }
       FlakeFrag.prototype.vertices = function(scale, explodeness) {
-        var i, j, t, vertices, _j, _len2, _ref2;
+        var i, j, t, vertexIndex, vertices, _j, _len2, _ref2, _ref3;
         if (explodeness == null) {
           explodeness = 0;
         }
-        vertices = [];
+        vertices = (_ref2 = this.myVertices) != null ? _ref2 : [];
+        vertexIndex = {
+          i: 0
+        };
         t = new Transform();
         t.scale(scale, scale);
-        _ref2 = [1, -1];
-        for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
-          j = _ref2[_j];
+        _ref3 = [1, -1];
+        for (_j = 0, _len2 = _ref3.length; _j < _len2; _j++) {
+          j = _ref3[_j];
           t.scale(1, j);
           for (i = 0; i <= 5; i++) {
             t.rotate(oneThirdPi);
-            this._vertices(vertices, t, explodeness);
+            this._vertices(vertices, t, explodeness, vertexIndex);
           }
         }
-        return vertices;
+        return this.myVertices = vertices;
       };
-      FlakeFrag.prototype._vertices = function(vertices, t, explodeness) {
-        var c1, c2, kid, _j, _len2, _ref2;
+      FlakeFrag.prototype._vertices = function(vertices, t, explodeness, vertexIndex) {
+        var c1, c2, kid, vertex1, vertex2, vi, _j, _len2, _ref2;
         if (!this.kids) {
           return;
         }
@@ -131,8 +134,20 @@
           kid = _ref2[_j];
           c1 = t.t(0, 0);
           c2 = t.t(kid.x, kid.y);
-          vertices.push(v(c1[0], c1[1], 0), v(c2[0], c2[1], 0));
-          kid._vertices(vertices, t, explodeness);
+          vi = vertexIndex.i;
+          vertex1 = vertices[vi];
+          if (vertex1) {
+            vertex2 = vertices[vi + 1];
+            vertex1.position.x = c1[0];
+            vertex1.position.y = c1[1];
+            vertex2.position.x = c2[0];
+            vertex2.position.y = c2[1];
+          } else {
+            vertices[vi] = v(c1[0], c1[1], 0);
+            vertices[vi + 1] = v(c2[0], c2[1], 0);
+          }
+          vertexIndex.i += 2;
+          kid._vertices(vertices, t, explodeness, vertexIndex);
         }
         return t.translate(-this.x - explodeness, -this.y - explodeness);
       };

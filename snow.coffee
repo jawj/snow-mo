@@ -59,23 +59,32 @@ $ ->
         new FlakeFrag(maxLevel, level + 1)
          
     vertices: (scale, explodeness = 0) ->
-      vertices = []
+      vertices = @myVertices ? []
+      vertexIndex = {i: 0}
       t = new Transform()
       t.scale(scale, scale)
       for j in [1, -1]
         t.scale(1, j)
         for i in [0..5]
           t.rotate(oneThirdPi)
-          @_vertices(vertices, t, explodeness)
-      vertices
+          @_vertices(vertices, t, explodeness, vertexIndex)
+      @myVertices = vertices
       
-    _vertices: (vertices, t, explodeness) ->
+    _vertices: (vertices, t, explodeness, vertexIndex) ->
       return unless @kids
       t.translate(@x + explodeness, @y + explodeness)
       for kid in @kids
         c1 = t.t(0, 0); c2 = t.t(kid.x, kid.y)
-        vertices.push(v(c1[0], c1[1], 0), v(c2[0], c2[1], 0))
-        kid._vertices(vertices, t, explodeness)
+        vi = vertexIndex.i
+        vertex1 = vertices[vi]
+        if vertex1
+          vertex2 = vertices[vi + 1]
+          vertex1.position.x = c1[0]; vertex1.position.y = c1[1]
+          vertex2.position.x = c2[0]; vertex2.position.y = c2[1]
+        else
+          vertices[vi] = v(c1[0], c1[1], 0); vertices[vi + 1] = v(c2[0], c2[1], 0)
+        vertexIndex.i += 2
+        kid._vertices(vertices, t, explodeness, vertexIndex)
       t.translate(-@x - explodeness, -@y - explodeness)
   
   class Flake
