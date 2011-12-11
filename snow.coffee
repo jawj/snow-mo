@@ -18,13 +18,10 @@ $ ->
     stats.domElement.id = 'stats'
     document.body.appendChild(stats.domElement)
   
-  # shortcuts
-  Transform::t = Transform::transformPoint
+  Transform::t = Transform::transformPoint  # shortcut
   twoPi = Math.PI * 2
-  halfPi = Math.PI / 2
-  oneThirdPi = Math.PI /3
-  v = (x, y, z) -> new THREE.Vertex(new THREE.Vector3(x, y, z))
-  window.v = v
+  v = (x,y,z) -> new THREE.Vertex(new THREE.Vector3(x, y, z))
+  
   randInRange = (range...) ->
     # accepts either 2 numeric args -- min, max -- or one array arg -- [min, max]
     range = range[0] unless typeof(range[0]) == 'number'
@@ -53,45 +50,38 @@ $ ->
     constructor: (maxLevel, level = 0) ->
       @x = if level == 0 then 0 else Math.random()
       @y = if level == 0 then 0 else Math.random()
-      return if level >= maxLevel
+      return unless level < maxLevel
       extraKids = if level == 0 then 0 else 2
       @kids = for i in [0..randInRange(0, extraKids) + 1]
         new FlakeFrag(maxLevel, level + 1)
          
     vertices: (scale, explodeness = 0) ->
-      vertices = @myVertices ? []
-      vertexIndex = {i: 0}
+      vertices = []
       t = new Transform()
       t.scale(scale, scale)
       for j in [1, -1]
         t.scale(1, j)
         for i in [0..5]
-          t.rotate(oneThirdPi)
-          @_vertices(vertices, t, explodeness, vertexIndex)
-      @myVertices = vertices
+          t.rotate(Math.PI / 3)
+          @_vertices(vertices, t, explodeness)
+      vertices
       
-    _vertices: (vertices, t, explodeness, vertexIndex) ->
+    _vertices: (vertices, t, explodeness) ->
       return unless @kids
       t.translate(@x + explodeness, @y + explodeness)
       for kid in @kids
-        c1 = t.t(0, 0); c2 = t.t(kid.x, kid.y)
-        vi = vertexIndex.i
-        vertex1 = vertices[vi]
-        if vertex1
-          vertex2 = vertices[vi + 1]
-          vertex1.position.x = c1[0]; vertex1.position.y = c1[1]
-          vertex2.position.x = c2[0]; vertex2.position.y = c2[1]
-        else
-          vertices[vi] = v(c1[0], c1[1], 0); vertices[vi + 1] = v(c2[0], c2[1], 0)
-        vertexIndex.i += 2
-        kid._vertices(vertices, t, explodeness, vertexIndex)
+        c = t.t(0, 0)
+        vertices.push(v(c[0], c[1], 0))
+        c = t.t(kid.x, kid.y)
+        vertices.push(v(c[0], c[1], 0))
+        kid._vertices(vertices, t, explodeness)
       t.translate(-@x - explodeness, -@y - explodeness)
   
   class Flake
     lineMaterial: new THREE.LineBasicMaterial(color: 0xffffff, linewidth: params.linewidth)
     
-    xRange: [-150, 150]; yRange: [150, -150]; zRange: [-150, 150]
-    explodeSpeed: 0.003
+    xRange: [-150,  150]; yRange: [ 150, -150]; zRange: [-150,  150]
+    explodeSpeed:  0.003
     
     t = new Transform(); t.translate(-16, 22); t.scale(0.5, -0.5)  # roughly centre, vertically flip and resize logo
     logo: verticesFromSVGPaths(window.logoSvg, t)
@@ -167,7 +157,7 @@ $ ->
   camZ = camZRange[1]
   camT = new Transform()
   windT = new Transform()
-  windT.rotate(-halfPi)
+  windT.rotate(-Math.PI / 2)
   speed = params.speed
   windSpeed = 0
   
@@ -191,15 +181,17 @@ $ ->
   
   $(window).on 'resize', setSize
   $(document).on 'keyup', (ev) ->
-    return unless ev.keyCode in [32, 80, 27]
-    ev.preventDefault()
     switch ev.keyCode
       when 32  # space
         speed = if speed == params.speed then params.speed * 3 else params.speed
+        ev.preventDefault()
       when 80  # P
         paused = not paused
+        ev.preventDefault()
       when 27  # Esc
-        (flake.click(ev) if flake.rootFrag) for flake in flakes
+        for flake in flakes
+          flake.click(ev) if flake.rootFrag
+        ev.preventDefault()
         
   $(window).on 'click', (ev) ->
     return if moved > 3  # number of mousemove events, threshold for deciding user meant to drag not click

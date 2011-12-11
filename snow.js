@@ -1,7 +1,7 @@
 (function() {
   var __slice = Array.prototype.slice;
   $(function() {
-    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, down, flake, flakes, halfPi, i, kvp, last, moved, oneThirdPi, params, paused, projector, randInRange, renderer, scene, setSize, speed, stats, sx, sy, twoPi, updateCamPos, v, verticesFromSVGPaths, windSpeed, windT, _i, _len, _ref;
+    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, down, flake, flakes, i, kvp, last, moved, params, paused, projector, randInRange, renderer, scene, setSize, speed, stats, sx, sy, twoPi, updateCamPos, v, verticesFromSVGPaths, windSpeed, windT, _i, _len, _ref;
     if (!(window.WebGLRenderingContext && document.createElement('canvas').getContext('experimental-webgl'))) {
       $('#noWebGL').show();
       return;
@@ -28,12 +28,9 @@
     }
     Transform.prototype.t = Transform.prototype.transformPoint;
     twoPi = Math.PI * 2;
-    halfPi = Math.PI / 2;
-    oneThirdPi = Math.PI / 3;
     v = function(x, y, z) {
       return new THREE.Vertex(new THREE.Vector3(x, y, z));
     };
-    window.v = v;
     randInRange = function() {
       var range;
       range = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
@@ -88,7 +85,7 @@
         }
         this.x = level === 0 ? 0 : Math.random();
         this.y = level === 0 ? 0 : Math.random();
-        if (level >= maxLevel) {
+        if (!(level < maxLevel)) {
           return;
         }
         extraKids = level === 0 ? 0 : 2;
@@ -102,29 +99,26 @@
         })();
       }
       FlakeFrag.prototype.vertices = function(scale, explodeness) {
-        var i, j, t, vertexIndex, vertices, _j, _len2, _ref2, _ref3;
+        var i, j, t, vertices, _j, _len2, _ref2;
         if (explodeness == null) {
           explodeness = 0;
         }
-        vertices = (_ref2 = this.myVertices) != null ? _ref2 : [];
-        vertexIndex = {
-          i: 0
-        };
+        vertices = [];
         t = new Transform();
         t.scale(scale, scale);
-        _ref3 = [1, -1];
-        for (_j = 0, _len2 = _ref3.length; _j < _len2; _j++) {
-          j = _ref3[_j];
+        _ref2 = [1, -1];
+        for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+          j = _ref2[_j];
           t.scale(1, j);
           for (i = 0; i <= 5; i++) {
-            t.rotate(oneThirdPi);
-            this._vertices(vertices, t, explodeness, vertexIndex);
+            t.rotate(Math.PI / 3);
+            this._vertices(vertices, t, explodeness);
           }
         }
-        return this.myVertices = vertices;
+        return vertices;
       };
-      FlakeFrag.prototype._vertices = function(vertices, t, explodeness, vertexIndex) {
-        var c1, c2, kid, vertex1, vertex2, vi, _j, _len2, _ref2;
+      FlakeFrag.prototype._vertices = function(vertices, t, explodeness) {
+        var c, kid, _j, _len2, _ref2;
         if (!this.kids) {
           return;
         }
@@ -132,22 +126,11 @@
         _ref2 = this.kids;
         for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
           kid = _ref2[_j];
-          c1 = t.t(0, 0);
-          c2 = t.t(kid.x, kid.y);
-          vi = vertexIndex.i;
-          vertex1 = vertices[vi];
-          if (vertex1) {
-            vertex2 = vertices[vi + 1];
-            vertex1.position.x = c1[0];
-            vertex1.position.y = c1[1];
-            vertex2.position.x = c2[0];
-            vertex2.position.y = c2[1];
-          } else {
-            vertices[vi] = v(c1[0], c1[1], 0);
-            vertices[vi + 1] = v(c2[0], c2[1], 0);
-          }
-          vertexIndex.i += 2;
-          kid._vertices(vertices, t, explodeness, vertexIndex);
+          c = t.t(0, 0);
+          vertices.push(v(c[0], c[1], 0));
+          c = t.t(kid.x, kid.y);
+          vertices.push(v(c[0], c[1], 0));
+          kid._vertices(vertices, t, explodeness);
         }
         return t.translate(-this.x - explodeness, -this.y - explodeness);
       };
@@ -264,7 +247,7 @@
     camZ = camZRange[1];
     camT = new Transform();
     windT = new Transform();
-    windT.rotate(-halfPi);
+    windT.rotate(-Math.PI / 2);
     speed = params.speed;
     windSpeed = 0;
     updateCamPos = function() {
@@ -297,23 +280,22 @@
     animate(new Date().getTime());
     $(window).on('resize', setSize);
     $(document).on('keyup', function(ev) {
-      var flake, _j, _len2, _ref2, _results;
-      if ((_ref2 = ev.keyCode) !== 32 && _ref2 !== 80 && _ref2 !== 27) {
-        return;
-      }
-      ev.preventDefault();
+      var flake, _j, _len2;
       switch (ev.keyCode) {
         case 32:
-          return speed = speed === params.speed ? params.speed * 3 : params.speed;
+          speed = speed === params.speed ? params.speed * 3 : params.speed;
+          return ev.preventDefault();
         case 80:
-          return paused = !paused;
+          paused = !paused;
+          return ev.preventDefault();
         case 27:
-          _results = [];
           for (_j = 0, _len2 = flakes.length; _j < _len2; _j++) {
             flake = flakes[_j];
-            _results.push((flake.rootFrag ? flake.click(ev) : void 0));
+            if (flake.rootFrag) {
+              flake.click(ev);
+            }
           }
-          return _results;
+          return ev.preventDefault();
       }
     });
     $(window).on('click', function(ev) {
