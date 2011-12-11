@@ -85,18 +85,17 @@
         }
         this.x = level === 0 ? 0 : Math.random();
         this.y = level === 0 ? 0 : Math.random();
+        if (!(level < maxLevel)) {
+          return;
+        }
+        extraKids = level === 0 ? 0 : 2;
         this.kids = (function() {
           var _ref2, _results;
-          if (level >= maxLevel) {
-            return [];
-          } else {
-            extraKids = level === 0 ? 0 : 2;
-            _results = [];
-            for (i = 0, _ref2 = randInRange(0, extraKids) + 1; 0 <= _ref2 ? i <= _ref2 : i >= _ref2; 0 <= _ref2 ? i++ : i--) {
-              _results.push(new FlakeFrag(maxLevel, level + 1));
-            }
-            return _results;
+          _results = [];
+          for (i = 0, _ref2 = randInRange(0, extraKids) + 1; 0 <= _ref2 ? i <= _ref2 : i >= _ref2; 0 <= _ref2 ? i++ : i--) {
+            _results.push(new FlakeFrag(maxLevel, level + 1));
           }
+          return _results;
         })();
       }
       FlakeFrag.prototype.vertices = function(scale, explodeness) {
@@ -120,6 +119,9 @@
       };
       FlakeFrag.prototype._vertices = function(vertices, t, explodeness) {
         var c, kid, _j, _len2, _ref2;
+        if (!this.kids) {
+          return;
+        }
         t.translate(this.x + explodeness, this.y + explodeness);
         _ref2 = this.kids;
         for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {

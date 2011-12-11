@@ -50,11 +50,10 @@ $ ->
     constructor: (maxLevel, level = 0) ->
       @x = if level == 0 then 0 else Math.random()
       @y = if level == 0 then 0 else Math.random()
-      @kids = if level >= maxLevel then []
-      else 
-       extraKids = if level == 0 then 0 else 2
-       for i in [0..randInRange(0, extraKids) + 1]
-         new FlakeFrag(maxLevel, level + 1)
+      return unless level < maxLevel
+      extraKids = if level == 0 then 0 else 2
+      @kids = for i in [0..randInRange(0, extraKids) + 1]
+        new FlakeFrag(maxLevel, level + 1)
          
     vertices: (scale, explodeness = 0) ->
       vertices = []
@@ -68,6 +67,7 @@ $ ->
       vertices
       
     _vertices: (vertices, t, explodeness) ->
+      return unless @kids
       t.translate(@x + explodeness, @y + explodeness)
       for kid in @kids
         c = t.t(0, 0)
