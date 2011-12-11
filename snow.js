@@ -81,7 +81,7 @@
     };
     FlakeFrag = (function() {
       function FlakeFrag(maxLevel, level) {
-        var extraKids, i;
+        var i, maxKids;
         if (level == null) {
           level = 0;
         }
@@ -90,11 +90,11 @@
         if (level >= maxLevel) {
           return;
         }
-        extraKids = level === 0 ? 0 : 2;
+        maxKids = level === 0 ? 1 : 3;
         this.kids = (function() {
           var _ref2, _results;
           _results = [];
-          for (i = 0, _ref2 = randInRange(0, extraKids) + 1; 0 <= _ref2 ? i <= _ref2 : i >= _ref2; 0 <= _ref2 ? i++ : i--) {
+          for (i = 0, _ref2 = randInRange(1, maxKids); 0 <= _ref2 ? i <= _ref2 : i >= _ref2; 0 <= _ref2 ? i++ : i--) {
             _results.push(new FlakeFrag(maxLevel, level + 1));
           }
           return _results;

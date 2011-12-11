@@ -54,8 +54,8 @@ $ ->
       @x = if level == 0 then 0 else Math.random()
       @y = if level == 0 then 0 else Math.random()
       return if level >= maxLevel
-      extraKids = if level == 0 then 0 else 2
-      @kids = for i in [0..randInRange(0, extraKids) + 1]
+      maxKids = if level == 0 then 1 else 3
+      @kids = for i in [0..randInRange(1, maxKids)]
         new FlakeFrag(maxLevel, level + 1)
          
     vertices: (scale, explodeness = 0) ->
