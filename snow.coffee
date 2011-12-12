@@ -130,11 +130,13 @@ $ ->
       else
         window.open('http://casa.ucl.ac.uk', 'casa') unless iOS
 
+  dvp = window.devicePixelRatio ? 1
   renderer = new THREE.WebGLRenderer(antialias: true)
   camera = new THREE.PerspectiveCamera(33, 1, 1, 10000)  # aspect (2nd param) shortly to be overridden...
-  
   setSize = ->
-    renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.setSize(window.innerWidth * dvp, window.innerHeight * dvp)
+    renderer.domElement.style.width = window.innerWidth + 'px'
+    renderer.domElement.style.height = window.innerHeight + 'px'
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
   setSize()
@@ -145,7 +147,7 @@ $ ->
   
   scene = new THREE.Scene()
   scene.add(camera)
-  scene.fog = new THREE.FogExp2(0x000022, 0.00265)
+  scene.fog = new THREE.FogExp2(0x000022, 0.0025)
   
   projector = new THREE.Projector()
   

@@ -1,7 +1,7 @@
 (function() {
   var __slice = Array.prototype.slice;
   $(function() {
-    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, explodeAll, flake, flakeXpode, flakes, halfPi, i, iOS, kvp, last, lastTapTime, maxSpeedMultiplier, moved, oneThirdPi, origCamZRelative, params, paused, projector, randInRange, renderer, scene, setSize, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, _i, _len, _ref;
+    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, halfPi, i, iOS, kvp, last, lastTapTime, maxSpeedMultiplier, moved, oneThirdPi, origCamZRelative, params, paused, projector, randInRange, renderer, scene, setSize, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, _i, _len, _ref, _ref2;
     if (!(window.WebGLRenderingContext && document.createElement('canvas').getContext('experimental-webgl'))) {
       $('#noWebGL').show();
       return;
@@ -220,12 +220,15 @@
       };
       return Flake;
     })();
+    dvp = (_ref2 = window.devicePixelRatio) != null ? _ref2 : 1;
     renderer = new THREE.WebGLRenderer({
       antialias: true
     });
     camera = new THREE.PerspectiveCamera(33, 1, 1, 10000);
     setSize = function() {
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setSize(window.innerWidth * dvp, window.innerHeight * dvp);
+      renderer.domElement.style.width = window.innerWidth + 'px';
+      renderer.domElement.style.height = window.innerHeight + 'px';
       camera.aspect = window.innerWidth / window.innerHeight;
       return camera.updateProjectionMatrix();
     };
@@ -235,12 +238,12 @@
     renderer.clear();
     scene = new THREE.Scene();
     scene.add(camera);
-    scene.fog = new THREE.FogExp2(0x000022, 0.00265);
+    scene.fog = new THREE.FogExp2(0x000022, 0.0025);
     projector = new THREE.Projector();
     flakes = flakes = (function() {
-      var _ref2, _results;
+      var _ref3, _results;
       _results = [];
-      for (i = 0, _ref2 = params.flakes; 0 <= _ref2 ? i < _ref2 : i > _ref2; 0 <= _ref2 ? i++ : i--) {
+      for (i = 0, _ref3 = params.flakes; 0 <= _ref3 ? i < _ref3 : i > _ref3; 0 <= _ref3 ? i++ : i--) {
         flake = new Flake();
         flake.line.position.y = randInRange(flake.yRange);
         _results.push(flake);
@@ -259,8 +262,8 @@
     speed = params.speed;
     maxSpeedMultiplier = 3;
     updateCamPos = function() {
-      var _ref2;
-      return _ref2 = camT.t(0, camZ), camera.position.x = _ref2[0], camera.position.z = _ref2[1], _ref2;
+      var _ref3;
+      return _ref3 = camT.t(0, camZ), camera.position.x = _ref3[0], camera.position.z = _ref3[1], _ref3;
     };
     animate = function(t) {
       var dt, flake, wind, _j, _len2;
@@ -303,8 +306,8 @@
       return _results;
     };
     $(document).on('keyup', function(ev) {
-      var _ref2;
-      if ((_ref2 = ev.keyCode) !== 32 && _ref2 !== 80 && _ref2 !== 27) {
+      var _ref3;
+      if ((_ref3 = ev.keyCode) !== 32 && _ref3 !== 80 && _ref3 !== 27) {
         return;
       }
       ev.preventDefault();
@@ -372,8 +375,8 @@
     };
     $(renderer.domElement).on('mousemove', windChange);
     startCamPan = function(ev) {
-      var _ref2;
-      if (((_ref2 = ev.originalEvent.touches) != null ? _ref2.length : void 0) > 1) {
+      var _ref3;
+      if (((_ref3 = ev.originalEvent.touches) != null ? _ref3.length : void 0) > 1) {
         stopCamPan();
         return;
       }
