@@ -1,7 +1,7 @@
 (function() {
   var __slice = Array.prototype.slice;
   $(function() {
-    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, halfPi, i, iOS, kvp, last, lastTapTime, maxSpeedMultiplier, moved, oneThirdPi, origCamZRelative, params, paused, projector, randInRange, renderer, scene, setSize, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, _i, _len, _ref, _ref2;
+    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, halfPi, i, iOS, kvp, last, lastTapTime, maxSpeedMultiplier, moved, oneThirdPi, origCamZoom, params, paused, projector, randInRange, renderer, scene, setSize, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, _i, _len, _ref, _ref2;
     if (!(window.WebGLRenderingContext && document.createElement('canvas').getContext('experimental-webgl'))) {
       $('#noWebGL').show();
       return;
@@ -256,7 +256,7 @@
     last = new Date().getTime();
     camZRange = [300, 100];
     camZ = camZRange[0];
-    origCamZRelative = null;
+    origCamZoom = null;
     camT = new Transform();
     windT = new Transform();
     windT.rotate(-halfPi);
@@ -407,12 +407,13 @@
     };
     $(renderer.domElement).on('mousemove touchmove', doCamPan);
     doCamZoom = function(ev, d, dX, dY) {
-      var newCamZRelative;
+      var newCamZoom, scaleChange;
       if (dY != null) {
         camZ -= dY * 5;
       } else {
-        newCamZRelative = origCamZRelative + 100 * (ev.originalEvent.scale - 1);
-        camZ = 200 + camZRange[1] - newCamZRelative;
+        scaleChange = ev.originalEvent.scale - 1;
+        newCamZoom = origCamZoom + scaleChange * (scaleChange < 0 ? 2 : 1);
+        camZ = (1 - newCamZoom) * (camZRange[0] - camZRange[1]) + camZRange[1];
       }
       camZ = Math.max(camZ, camZRange[1]);
       camZ = Math.min(camZ, camZRange[0]);
@@ -420,7 +421,7 @@
     };
     $(renderer.domElement).on('mousewheel gesturechange', doCamZoom);
     startCamZoom = function(ev) {
-      origCamZRelative = 200 - (camZ - camZRange[1]);
+      origCamZoom = 1 - (camZ - camZRange[1]) / (camZRange[0] - camZRange[1]);
       return moved = 100;
     };
     return $(renderer.domElement).on('gesturestart', startCamZoom);

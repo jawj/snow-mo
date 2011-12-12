@@ -162,7 +162,7 @@ $ ->
   last = new Date().getTime()
   camZRange = [300, 100]
   camZ = camZRange[0]
-  origCamZRelative = null  # for scope
+  origCamZoom = null  # for scope
   camT = new Transform()
   windT = new Transform()
   windT.rotate(-halfPi)
@@ -261,15 +261,16 @@ $ ->
   doCamZoom = (ev, d, dX, dY) ->
     if dY? then camZ -= dY * 5
     else
-      newCamZRelative = origCamZRelative + 100 * (ev.originalEvent.scale - 1)
-      camZ = 200 + camZRange[1] - newCamZRelative
+      scaleChange = ev.originalEvent.scale - 1
+      newCamZoom = origCamZoom + scaleChange * (if scaleChange < 0 then 2 else 1)  # differential factor -> symmetrical motion
+      camZ = (1 - newCamZoom) * (camZRange[0] - camZRange[1]) + camZRange[1]
     camZ = Math.max(camZ, camZRange[1])
     camZ = Math.min(camZ, camZRange[0])
     updateCamPos()
   $(renderer.domElement).on 'mousewheel gesturechange', doCamZoom
   
   startCamZoom = (ev) ->
-    origCamZRelative = 200 - (camZ - camZRange[1])  # range: 0 (unzoom) - 200 (full zoom)
+    origCamZoom = 1 - (camZ - camZRange[1]) / (camZRange[0] - camZRange[1])  # range: 0 (unzoom) - 1 (full zoom)
     moved = 100  # prevent click recognition (slightly hacky)
   $(renderer.domElement).on 'gesturestart', startCamZoom
 
