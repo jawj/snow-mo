@@ -12,7 +12,8 @@
       speed: 1,
       linewidth: 1,
       stats: 0,
-      credits: 1
+      credits: 1,
+      inv: 0
     };
     _ref = location.search.substring(1).split('&');
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -144,7 +145,7 @@
     Flake = (function() {
       var t;
       Flake.prototype.lineMaterial = new THREE.LineBasicMaterial({
-        color: 0xffffff,
+        color: (params.inv === 1 ? 0x666666 : 0xffffff),
         linewidth: params.linewidth
       });
       Flake.prototype.xRange = [-150, 150];
@@ -234,11 +235,11 @@
     };
     setSize();
     document.body.appendChild(renderer.domElement);
-    renderer.setClearColorHex(0x000022, 1.0);
+    renderer.setClearColorHex((params.inv === 1 ? 0xffffff : 0x000022), 1.0);
     renderer.clear();
     scene = new THREE.Scene();
     scene.add(camera);
-    scene.fog = new THREE.FogExp2(0x000022, 0.0025);
+    scene.fog = new THREE.FogExp2((params.inv === 1 ? 0xffffff : 0x000022), 0.0025);
     projector = new THREE.Projector();
     flakes = flakes = (function() {
       var _ref3, _results;

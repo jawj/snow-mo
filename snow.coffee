@@ -12,6 +12,7 @@ $ ->
     linewidth: 1
     stats:     0
     credits:   1
+    inv:       0
   (params[kvp.split('=')[0]] = parseInt(kvp.split('=')[1])) for kvp in location.search.substring(1).split('&')
   
   $('#creditInner').html('responds to: <b>swipe</b> — <b>pinch</b> — <b>tap</b> (on snowflake) — <b>double tap</b>') if iOS
@@ -82,7 +83,7 @@ $ ->
       t.translate(-@x - explodeness, -@y - explodeness)
   
   class Flake
-    lineMaterial: new THREE.LineBasicMaterial(color: 0xffffff, linewidth: params.linewidth)
+    lineMaterial: new THREE.LineBasicMaterial(color: (if params.inv == 1 then 0x666666 else 0xffffff), linewidth: params.linewidth)
     
     xRange: [-150, 150]; yRange: [150, -150]; zRange: [-150, 150]
     explodeSpeed: 0.003
@@ -142,12 +143,12 @@ $ ->
   setSize()
   
   document.body.appendChild(renderer.domElement)
-  renderer.setClearColorHex(0x000022, 1.0)
+  renderer.setClearColorHex((if params.inv == 1 then 0xffffff else 0x000022), 1.0)
   renderer.clear()
   
   scene = new THREE.Scene()
   scene.add(camera)
-  scene.fog = new THREE.FogExp2(0x000022, 0.0025)
+  scene.fog = new THREE.FogExp2((if params.inv == 1 then 0xffffff else 0x000022), 0.0025)
   
   projector = new THREE.Projector()
   
