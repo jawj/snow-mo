@@ -160,7 +160,7 @@ $ ->
   paused = down = moved = no
   sx = sy = windSpeed = lastTapTime = 0
   last = new Date().getTime()
-  camZRange = [301, 1]
+  camZRange = [300, 50]
   camZ = camZRange[0]
   origCamZoom = null  # for scope
   camT = new Transform()
@@ -228,7 +228,7 @@ $ ->
   doubleTapDetect = (ev) ->
     now = new Date().getTime()
     tapGap = now - lastTapTime
-    toggleSpeed() if tapGap < 200 and ev.originalEvent.touches.length < 2
+    toggleSpeed() if tapGap < 250 and ev.originalEvent.touches.length < 2
     lastTapTime = now
   $(renderer.domElement).on 'touchstart', doubleTapDetect
 
@@ -236,22 +236,22 @@ $ ->
   $(renderer.domElement).on 'mousemove', windChange
 
   startCamPan = (ev) ->
-    if ev.originalEvent.touches?.length > 1
+    if ev.originalEvent.touches?.length != 1
       stopCamPan()
       return
     down = yes
     moved = 0
     sx = (ev.clientX || ev.originalEvent.touches[0].clientX); sy = (ev.clientY || ev.originalEvent.touches[0].clientY)
-  $(renderer.domElement).on 'mousedown touchstart', startCamPan
+  $(renderer.domElement).on 'mousedown touchstart touchend touchcancel', startCamPan
   
   stopCamPan = -> down = no
-  $(renderer.domElement).on 'mouseup touchend touchcancel', stopCamPan
+  $(renderer.domElement).on 'mouseup', stopCamPan
   
   doCamPan = (ev) ->
     if down
       moved += 1
       dx = (ev.clientX || ev.originalEvent.touches[0].clientX) - sx; dy = (ev.clientY || ev.originalEvent.touches[0].clientY) - sy
-      rotation = dx * -0.003
+      rotation = dx * -0.0005 * Math.log(camZ)
       camT.rotate(rotation)
       windT.rotate(rotation)
       updateCamPos()

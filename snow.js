@@ -254,7 +254,7 @@
     paused = down = moved = false;
     sx = sy = windSpeed = lastTapTime = 0;
     last = new Date().getTime();
-    camZRange = [301, 1];
+    camZRange = [300, 50];
     camZ = camZRange[0];
     origCamZoom = null;
     camT = new Transform();
@@ -365,7 +365,7 @@
       var now, tapGap;
       now = new Date().getTime();
       tapGap = now - lastTapTime;
-      if (tapGap < 200 && ev.originalEvent.touches.length < 2) {
+      if (tapGap < 250 && ev.originalEvent.touches.length < 2) {
         toggleSpeed();
       }
       return lastTapTime = now;
@@ -377,7 +377,7 @@
     $(renderer.domElement).on('mousemove', windChange);
     startCamPan = function(ev) {
       var _ref3;
-      if (((_ref3 = ev.originalEvent.touches) != null ? _ref3.length : void 0) > 1) {
+      if (((_ref3 = ev.originalEvent.touches) != null ? _ref3.length : void 0) !== 1) {
         stopCamPan();
         return;
       }
@@ -386,18 +386,18 @@
       sx = ev.clientX || ev.originalEvent.touches[0].clientX;
       return sy = ev.clientY || ev.originalEvent.touches[0].clientY;
     };
-    $(renderer.domElement).on('mousedown touchstart', startCamPan);
+    $(renderer.domElement).on('mousedown touchstart touchend touchcancel', startCamPan);
     stopCamPan = function() {
       return down = false;
     };
-    $(renderer.domElement).on('mouseup touchend touchcancel', stopCamPan);
+    $(renderer.domElement).on('mouseup', stopCamPan);
     doCamPan = function(ev) {
       var dx, dy, rotation;
       if (down) {
         moved += 1;
         dx = (ev.clientX || ev.originalEvent.touches[0].clientX) - sx;
         dy = (ev.clientY || ev.originalEvent.touches[0].clientY) - sy;
-        rotation = dx * -0.003;
+        rotation = dx * -0.0005 * Math.log(camZ);
         camT.rotate(rotation);
         windT.rotate(rotation);
         updateCamPos();
