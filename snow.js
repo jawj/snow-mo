@@ -376,8 +376,7 @@
     };
     $(renderer.domElement).on('mousemove', windChange);
     startCamPan = function(ev) {
-      var _ref3;
-      if (((_ref3 = ev.originalEvent.touches) != null ? _ref3.length : void 0) !== 1) {
+      if (ev.originalEvent.touches && ev.originalEvent.touches.length !== 1) {
         stopCamPan();
         return;
       }

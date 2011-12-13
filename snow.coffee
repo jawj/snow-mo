@@ -236,7 +236,7 @@ $ ->
   $(renderer.domElement).on 'mousemove', windChange
 
   startCamPan = (ev) ->
-    if ev.originalEvent.touches?.length != 1
+    if ev.originalEvent.touches and ev.originalEvent.touches.length != 1  # ? operator not helpful here!
       stopCamPan()
       return
     down = yes
