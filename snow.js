@@ -1,7 +1,7 @@
 (function() {
   var __slice = Array.prototype.slice;
   $(function() {
-    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, globe, globeGeom, halfPi, i, iOS, kvp, last, lastTapTime, maxSpeedMultiplier, moved, oneThirdPi, origCamZoom, params, paused, projector, randInRange, renderer, scene, setSize, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, _i, _len, _ref, _ref2;
+    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, globe, globeGeom, halfPi, i, iOS, kvp, last, lastTapTime, lineMaterial, maxSpeedMultiplier, moved, oneThirdPi, origCamZoom, params, paused, piOver180, projector, randInRange, renderer, scene, setSize, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, _i, _len, _ref, _ref2;
     if (!(window.WebGLRenderingContext && document.createElement('canvas').getContext('experimental-webgl'))) {
       $('#noWebGL').show();
       return;
@@ -25,6 +25,10 @@
       kvp = _ref[_i];
       params[kvp.split('=')[0]] = parseInt(kvp.split('=')[1]);
     }
+    lineMaterial = new THREE.LineBasicMaterial({
+      color: (params.inv === 1 ? 0x666666 : 0xffffff),
+      linewidth: params.linewidth
+    });
     if (iOS) {
       $('#creditInner').html('responds to: <b>swipe</b> — <b>pinch</b> — <b>tap</b> (on snowflake) — <b>double tap</b>');
     }
@@ -40,6 +44,7 @@
     twoPi = Math.PI * 2;
     halfPi = Math.PI / 2;
     oneThirdPi = Math.PI / 3;
+    piOver180 = Math.PI / 180;
     v = function(x, y, z) {
       return new THREE.Vertex(new THREE.Vector3(x, y, z));
     };
@@ -90,32 +95,31 @@
       return vertices;
     };
     window.verticesFromGeoJSON = function(geoJSON, r) {
-      var coords, cosLat, cosLon, item, lat, lon, sinLat, sinLon, vertices, x, x1, y, y1, z, z1, _j, _k, _len2, _len3, _ref2;
+      var coords, cosLat, cosLon, item, lat, lon, newV, oldV, sinLat, sinLon, vertices, x, y, z, _j, _k, _len2, _len3, _ref2;
       if (r == null) {
-        r = 50;
+        r = 40;
       }
       vertices = [];
       for (_j = 0, _len2 = geoJSON.length; _j < _len2; _j++) {
         item = geoJSON[_j];
-        x1 = y1 = z1 = null;
+        oldV = null;
         _ref2 = item.coordinates[0];
         for (_k = 0, _len3 = _ref2.length; _k < _len3; _k++) {
           coords = _ref2[_k];
-          lat = coords[0];
-          lon = coords[1];
+          lon = coords[0] * piOver180;
+          lat = coords[1] * piOver180;
           sinLat = Math.sin(lat);
           cosLat = Math.cos(lat);
           sinLon = Math.sin(lon);
           cosLon = Math.cos(lon);
-          x = r * cosLon * sinLat;
-          y = r * sinLon * sinLat;
-          z = r * cosLat;
-          if (x1) {
-            vertices.push(v(x1, y1, z1), v(x, y, z));
+          x = r * cosLat * sinLon;
+          y = r * sinLat * sinLon;
+          z = r * cosLon;
+          newV = v(x, y, z);
+          if (oldV) {
+            vertices.push(oldV, newV);
           }
-          x1 = x;
-          y1 = y;
-          z1 = z;
+          oldV = newV;
         }
       }
       return vertices;
@@ -180,10 +184,6 @@
     })();
     Flake = (function() {
       var t;
-      Flake.prototype.lineMaterial = new THREE.LineBasicMaterial({
-        color: (params.inv === 1 ? 0x666666 : 0xffffff),
-        linewidth: params.linewidth
-      });
       Flake.prototype.xRange = [-150, 150];
       Flake.prototype.yRange = [150, -150];
       Flake.prototype.zRange = [-150, 150];
@@ -218,7 +218,7 @@
         if (showOrigin) {
           geom.vertices.push(v(-5, 0, 0), v(5, 0, 0), v(0, -5, 0), v(0, 5, 0));
         }
-        this.line = new THREE.Line(geom, this.lineMaterial, THREE.LinePieces);
+        this.line = new THREE.Line(geom, lineMaterial, THREE.LinePieces);
         this.line.position = new THREE.Vector3(randInRange(this.xRange), this.yRange[0], randInRange(this.zRange));
         this.line.rotation = new THREE.Vector3(randInRange(0, twoPi), randInRange(0, twoPi), randInRange(0, twoPi));
         this.velocity = new THREE.Vector3(randInRange(-0.002, 0.002), randInRange(-0.010, -0.011), randInRange(-0.002, 0.002));
@@ -278,10 +278,7 @@
     scene.fog = new THREE.FogExp2((params.inv === 1 ? 0xffffff : 0x000022), 0.0025);
     globeGeom = new THREE.Geometry();
     globeGeom.vertices = verticesFromGeoJSON(window.globeGeoJSON);
-    globe = new THREE.Line(globeGeom, new THREE.LineBasicMaterial({
-      color: (params.inv === 1 ? 0x666666 : 0xffffff),
-      linewidth: params.linewidth
-    }), THREE.LinePieces);
+    globe = new THREE.Line(globeGeom, lineMaterial, THREE.LinePieces);
     scene.add(globe);
     projector = new THREE.Projector();
     flakes = flakes = (function() {

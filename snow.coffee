@@ -16,6 +16,8 @@ $ ->
     inv:       0
   (params[kvp.split('=')[0]] = parseInt(kvp.split('=')[1])) for kvp in location.search.substring(1).split('&')
   
+  lineMaterial = new THREE.LineBasicMaterial(color: (if params.inv == 1 then 0x666666 else 0xffffff), linewidth: params.linewidth)
+  
   $('#creditInner').html('responds to: <b>swipe</b> — <b>pinch</b> — <b>tap</b> (on snowflake) — <b>double tap</b>') if iOS
   $('#creditOuter').show() if params.credits
   if params.stats
@@ -27,7 +29,8 @@ $ ->
   Transform::t = Transform::transformPoint
   twoPi = Math.PI * 2
   halfPi = Math.PI / 2
-  oneThirdPi = Math.PI /3
+  oneThirdPi = Math.PI / 3
+  piOver180 = Math.PI / 180
   v = (x, y, z) -> new THREE.Vertex(new THREE.Vector3(x, y, z))
 
   randInRange = (range...) ->
@@ -54,16 +57,17 @@ $ ->
           x1 = x2; y1 = y2
     vertices
 	
-  window.verticesFromGeoJSON = (geoJSON, r = 50) ->
+  window.verticesFromGeoJSON = (geoJSON, r = 40) ->
     vertices = []
     for item in geoJSON
-      x1 = y1 = z1 = null
+      oldV = null
       for coords in item.coordinates[0]
-        lat = coords[0]; lon = coords[1]
+        lon = coords[0] * piOver180; lat = coords[1] * piOver180
         sinLat = Math.sin(lat); cosLat = Math.cos(lat); sinLon = Math.sin(lon); cosLon = Math.cos(lon)
-        x = r * cosLon * sinLat; y = r * sinLon * sinLat; z = r * cosLat
-        vertices.push(v(x1, y1, z1), v(x, y, z)) if x1
-        x1 = x; y1 = y; z1 = z
+        x = r * cosLat * sinLon; y = r * sinLat * sinLon; z = r * cosLon
+        newV = v(x, y, z)
+        vertices.push(oldV, newV) if oldV
+        oldV = newV
     vertices
   
   class FlakeFrag
@@ -96,7 +100,6 @@ $ ->
       t.translate(-@x - explodeness, -@y - explodeness)
   
   class Flake
-    lineMaterial: new THREE.LineBasicMaterial(color: (if params.inv == 1 then 0x666666 else 0xffffff), linewidth: params.linewidth)
     
     xRange: [-150, 150]; yRange: [150, -150]; zRange: [-150, 150]
     explodeSpeed: 0.003
@@ -119,7 +122,7 @@ $ ->
       geom = new THREE.Geometry()
       geom.vertices = if @rootFrag then @rootFrag.vertices(@scale) else @logo
       geom.vertices.push(v(-5, 0, 0), v(5, 0, 0), v(0, -5, 0), v(0, 5, 0)) if showOrigin  # for debugging
-      @line = new THREE.Line(geom, @lineMaterial, THREE.LinePieces)
+      @line = new THREE.Line(geom, lineMaterial, THREE.LinePieces)
       @line.position = new THREE.Vector3(randInRange(@xRange), @yRange[0], randInRange(@zRange))
       @line.rotation = new THREE.Vector3(randInRange(0, twoPi), randInRange(0, twoPi), randInRange(0, twoPi))
       @velocity = new THREE.Vector3(randInRange(-0.002, 0.002),  randInRange(-0.010, -0.011),  randInRange(-0.002, 0.002))
@@ -162,14 +165,11 @@ $ ->
   scene = new THREE.Scene()
   scene.add(camera)
   scene.fog = new THREE.FogExp2((if params.inv == 1 then 0xffffff else 0x000022), 0.0025)
-  
-  
-  
+
   globeGeom = new THREE.Geometry()
   globeGeom.vertices = verticesFromGeoJSON(window.globeGeoJSON)
-  globe = new THREE.Line(globeGeom, new THREE.LineBasicMaterial(color: (if params.inv == 1 then 0x666666 else 0xffffff), linewidth: params.linewidth), THREE.LinePieces)
+  globe = new THREE.Line(globeGeom, lineMaterial, THREE.LinePieces)
   scene.add(globe)
-  
   
   projector = new THREE.Projector()
   
