@@ -160,7 +160,7 @@ $ ->
   paused = down = moved = no
   sx = sy = windSpeed = lastTapTime = 0
   last = new Date().getTime()
-  camZRange = [300, 100]
+  camZRange = [301, 1]
   camZ = camZRange[0]
   origCamZoom = null  # for scope
   camT = new Transform()
@@ -261,8 +261,7 @@ $ ->
   doCamZoom = (ev, d, dX, dY) ->
     if dY? then camZ -= dY * 5
     else
-      scaleChange = ev.originalEvent.scale - 1
-      newCamZoom = origCamZoom + scaleChange * (if scaleChange < 0 then 2 else 1)  # differential factor -> symmetrical motion
+      newCamZoom = origCamZoom + Math.log(ev.originalEvent.scale)
       camZ = (1 - newCamZoom) * (camZRange[0] - camZRange[1]) + camZRange[1]
     camZ = Math.max(camZ, camZRange[1])
     camZ = Math.min(camZ, camZRange[0])

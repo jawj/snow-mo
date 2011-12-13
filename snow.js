@@ -254,7 +254,7 @@
     paused = down = moved = false;
     sx = sy = windSpeed = lastTapTime = 0;
     last = new Date().getTime();
-    camZRange = [300, 100];
+    camZRange = [301, 1];
     camZ = camZRange[0];
     origCamZoom = null;
     camT = new Transform();
@@ -407,12 +407,11 @@
     };
     $(renderer.domElement).on('mousemove touchmove', doCamPan);
     doCamZoom = function(ev, d, dX, dY) {
-      var newCamZoom, scaleChange;
+      var newCamZoom;
       if (dY != null) {
         camZ -= dY * 5;
       } else {
-        scaleChange = ev.originalEvent.scale - 1;
-        newCamZoom = origCamZoom + scaleChange * (scaleChange < 0 ? 2 : 1);
+        newCamZoom = origCamZoom + Math.log(ev.originalEvent.scale);
         camZ = (1 - newCamZoom) * (camZRange[0] - camZRange[1]) + camZRange[1];
       }
       camZ = Math.max(camZ, camZRange[1]);
