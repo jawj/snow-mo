@@ -176,13 +176,14 @@ $ ->
   
   scene = new THREE.Scene()
   scene.add(camera)
-  scene.fog = new THREE.FogExp2(bgColour, 0.0025)
+  scene.fog = new THREE.FogExp2(bgColour, 0.00275)
   
+  axialTilt = 23.44 * piOver180
   if params.globe
     globeGeom = new THREE.Geometry()
+    # window.globeGeoJSON.coordinates.push([[0,90],[0,-90]])  # show axis
     globeGeom.vertices = verticesFromGeoJSON(window.globeGeoJSON)
     globe = new THREE.Line(globeGeom, globeMaterial, THREE.LinePieces)
-    globe.rotation.z = 23.44 * piOver180
     scene.add(globe)
   
   projector = new THREE.Projector()
@@ -212,7 +213,9 @@ $ ->
     wind = windT.t(0, windSpeed)
     if not paused
       flake.tick(dt, wind) for flake in flakes
-      globe.rotation.y += 0.005 if params.globe
+      if params.globe
+        globe.rotation.y += 0.005
+        globe.rotation.x = axialTilt
     renderer.clear()
     camera.lookAt(scene.position)
     renderer.render(scene, camera)
