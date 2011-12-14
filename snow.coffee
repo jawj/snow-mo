@@ -50,17 +50,16 @@ $ ->
     vertices = []
     for d in ds
       re = /([M|L])\s+(-?[0-9.]+)\s+(-?[0-9.]+)|Z\s+/g
-      x0 = y0 = x1 = y1 = null
+      origV = oldV = null
       while (matches = re.exec(d))?
         [dummy, cmd, x, y] = matches
-        if cmd == 'M'
-          x0 = x1 = x; y0 = y1 = y
+        c = t.t(x, y)
+        newV = v(c[0], c[1], 0)
+        if cmd == 'M' then origV = oldV = newV
         else 
-          if cmd == 'L' then x2 = x; y2 = y
-          else x2 = x0; y2 = y0  # Z
-          c1 = t.t(x1, y1); c2 = t.t(x2, y2)
-          vertices.push(v(c1[0], c1[1], 0), v(c2[0], c2[1], 0))
-          x1 = x2; y1 = y2
+          if cmd != 'L' then newV = origV  # Z
+          vertices.push(oldV, newV)
+          oldV = newV
     vertices
   
   window.verticesFromGeoJSON = (geoJSON, r = 40) ->
@@ -99,9 +98,11 @@ $ ->
     _vertices: (vertices, t, explodeness) ->
       return unless @kids
       t.translate(@x + explodeness, @y + explodeness)
+      c = t.t(0, 0)
+      commonV = v(c[0], c[1], 0)
       for kid in @kids
-        c1 = t.t(0, 0); c2 = t.t(kid.x, kid.y)
-        vertices.push(v(c1[0], c1[1], 0), v(c2[0], c2[1], 0))
+        c = t.t(kid.x, kid.y)
+        vertices.push(commonV, v(c[0], c[1], 0))
         kid._vertices(vertices, t, explodeness)
       t.translate(-@x - explodeness, -@y - explodeness)
   

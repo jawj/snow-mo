@@ -71,7 +71,7 @@
       return range[0] + Math.random() * (range[1] - range[0]);
     };
     verticesFromSVGPaths = function(svg, t) {
-      var c1, c2, cmd, d, ds, dummy, matches, re, vertices, x, x0, x1, x2, y, y0, y1, y2, _j, _len2;
+      var c, cmd, d, ds, dummy, matches, newV, oldV, origV, re, vertices, x, y, _j, _len2;
       if (t == null) {
         t = new Transform();
       }
@@ -84,25 +84,19 @@
       for (_j = 0, _len2 = ds.length; _j < _len2; _j++) {
         d = ds[_j];
         re = /([M|L])\s+(-?[0-9.]+)\s+(-?[0-9.]+)|Z\s+/g;
-        x0 = y0 = x1 = y1 = null;
+        origV = oldV = null;
         while ((matches = re.exec(d)) != null) {
           dummy = matches[0], cmd = matches[1], x = matches[2], y = matches[3];
+          c = t.t(x, y);
+          newV = v(c[0], c[1], 0);
           if (cmd === 'M') {
-            x0 = x1 = x;
-            y0 = y1 = y;
+            origV = oldV = newV;
           } else {
-            if (cmd === 'L') {
-              x2 = x;
-              y2 = y;
-            } else {
-              x2 = x0;
-              y2 = y0;
+            if (cmd !== 'L') {
+              newV = origV;
             }
-            c1 = t.t(x1, y1);
-            c2 = t.t(x2, y2);
-            vertices.push(v(c1[0], c1[1], 0), v(c2[0], c2[1], 0));
-            x1 = x2;
-            y1 = y2;
+            vertices.push(oldV, newV);
+            oldV = newV;
           }
         }
       }
@@ -179,17 +173,18 @@
         return vertices;
       };
       FlakeFrag.prototype._vertices = function(vertices, t, explodeness) {
-        var c1, c2, kid, _j, _len2, _ref2;
+        var c, commonV, kid, _j, _len2, _ref2;
         if (!this.kids) {
           return;
         }
         t.translate(this.x + explodeness, this.y + explodeness);
+        c = t.t(0, 0);
+        commonV = v(c[0], c[1], 0);
         _ref2 = this.kids;
         for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
           kid = _ref2[_j];
-          c1 = t.t(0, 0);
-          c2 = t.t(kid.x, kid.y);
-          vertices.push(v(c1[0], c1[1], 0), v(c2[0], c2[1], 0));
+          c = t.t(kid.x, kid.y);
+          vertices.push(commonV, v(c[0], c[1], 0));
           kid._vertices(vertices, t, explodeness);
         }
         return t.translate(-this.x - explodeness, -this.y - explodeness);
