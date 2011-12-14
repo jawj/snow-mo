@@ -1,7 +1,7 @@
 (function() {
   var __slice = Array.prototype.slice;
   $(function() {
-    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, globe, globeGeom, halfPi, i, iOS, kvp, last, lastTapTime, lineMaterial, maxSpeedMultiplier, moved, oneThirdPi, origCamZoom, params, paused, piOver180, projector, randInRange, renderer, scene, setSize, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, _i, _len, _ref, _ref2;
+    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, globe, globeGeom, halfPi, i, iOS, k, kvp, last, lastTapTime, lineMaterial, maxSpeedMultiplier, moved, oneThirdPi, origCamZoom, params, paused, piOver180, projector, randInRange, renderer, scene, setSize, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, wls, _i, _len, _ref, _ref2;
     if (!(window.WebGLRenderingContext && document.createElement('canvas').getContext('experimental-webgl'))) {
       $('#noWebGL').show();
       return;
@@ -18,12 +18,26 @@
       linewidth: 1,
       stats: 0,
       credits: 1,
-      inv: 0
+      inv: 0,
+      globe: 0
     };
-    _ref = location.search.substring(1).split('&');
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      kvp = _ref[_i];
-      params[kvp.split('=')[0]] = parseInt(kvp.split('=')[1]);
+    wls = window.location.search;
+    if (wls.length > 0) {
+      _ref = wls.substring(1).split('&');
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        kvp = _ref[_i];
+        params[kvp.split('=')[0]] = parseInt(kvp.split('=')[1]);
+      }
+    } else {
+      window.location.replace(window.location.href + '?' + ((function() {
+        var _results;
+        _results = [];
+        for (k in params) {
+          v = params[k];
+          _results.push("" + k + "=" + v);
+        }
+        return _results;
+      })()).join('&'));
     }
     lineMaterial = new THREE.LineBasicMaterial({
       color: (params.inv === 1 ? 0x666666 : 0xffffff),
@@ -276,10 +290,13 @@
     scene = new THREE.Scene();
     scene.add(camera);
     scene.fog = new THREE.FogExp2((params.inv === 1 ? 0xffffff : 0x000022), 0.0025);
-    globeGeom = new THREE.Geometry();
-    globeGeom.vertices = verticesFromGeoJSON(window.globeGeoJSON);
-    globe = new THREE.Line(globeGeom, lineMaterial, THREE.LinePieces);
-    scene.add(globe);
+    if (params.globe) {
+      globeGeom = new THREE.Geometry();
+      globeGeom.vertices = verticesFromGeoJSON(window.globeGeoJSON);
+      globe = new THREE.Line(globeGeom, lineMaterial, THREE.LinePieces);
+      globe.rotation.z = 23.44 * piOver180;
+      scene.add(globe);
+    }
     projector = new THREE.Projector();
     flakes = flakes = (function() {
       var _ref3, _results;
@@ -317,6 +334,9 @@
         for (_j = 0, _len2 = flakes.length; _j < _len2; _j++) {
           flake = flakes[_j];
           flake.tick(dt, wind);
+        }
+        if (params.globe) {
+          globe.rotation.y += 0.005;
         }
       }
       renderer.clear();

@@ -14,7 +14,13 @@ $ ->
     stats:     0
     credits:   1
     inv:       0
-  (params[kvp.split('=')[0]] = parseInt(kvp.split('=')[1])) for kvp in location.search.substring(1).split('&')
+    globe:     0
+  
+  wls = window.location.search
+  if wls.length > 0
+    (params[kvp.split('=')[0]] = parseInt(kvp.split('=')[1])) for kvp in wls.substring(1).split('&')
+  else
+    window.location.replace(window.location.href + '?' + ("#{k}=#{v}" for k, v of params).join('&'))
   
   lineMaterial = new THREE.LineBasicMaterial(color: (if params.inv == 1 then 0x666666 else 0xffffff), linewidth: params.linewidth)
   
@@ -56,7 +62,7 @@ $ ->
           vertices.push(v(c1[0], c1[1], 0), v(c2[0], c2[1], 0))
           x1 = x2; y1 = y2
     vertices
-	
+  
   window.verticesFromGeoJSON = (geoJSON, r = 40) ->
     vertices = []
     for line in geoJSON.coordinates
@@ -165,11 +171,13 @@ $ ->
   scene = new THREE.Scene()
   scene.add(camera)
   scene.fog = new THREE.FogExp2((if params.inv == 1 then 0xffffff else 0x000022), 0.0025)
-
-  globeGeom = new THREE.Geometry()
-  globeGeom.vertices = verticesFromGeoJSON(window.globeGeoJSON)
-  globe = new THREE.Line(globeGeom, lineMaterial, THREE.LinePieces)
-  scene.add(globe)
+  
+  if params.globe
+    globeGeom = new THREE.Geometry()
+    globeGeom.vertices = verticesFromGeoJSON(window.globeGeoJSON)
+    globe = new THREE.Line(globeGeom, lineMaterial, THREE.LinePieces)
+    globe.rotation.z = 23.44 * piOver180
+    scene.add(globe)
   
   projector = new THREE.Projector()
   
@@ -198,6 +206,7 @@ $ ->
     wind = windT.t(0, windSpeed)
     if not paused
       flake.tick(dt, wind) for flake in flakes
+      globe.rotation.y += 0.005 if params.globe
     renderer.clear()
     camera.lookAt(scene.position)
     renderer.render(scene, camera)
