@@ -67,7 +67,7 @@ $ ->
           oldV = newV
     vertices
   
-  window.verticesFromGeoJSON = (geoJSON, r = 70) ->
+  window.verticesFromGeoJSON = (geoJSON, r = 70) ->  # takes a single MULTILINESTRING
     vertices = []
     for line in geoJSON.coordinates
       oldV = null
