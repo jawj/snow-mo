@@ -22,7 +22,12 @@ $ ->
   else
     window.location.replace(window.location.href + '?' + ("#{k}=#{v}" for k, v of params).join('&'))
   
-  lineMaterial = new THREE.LineBasicMaterial(color: (if params.inv == 1 then 0x666666 else 0xffffff), linewidth: params.linewidth)
+  snowColour = if params.inv then 0x666666 else 0xffffff
+  globeColour = 0x999999
+  bgColour = if params.inv then 0xffffee else 0x000022
+  
+  snowMaterial  = new THREE.LineBasicMaterial(color: snowColour,  linewidth: params.linewidth)
+  globeMaterial = new THREE.LineBasicMaterial(color: globeColour, linewidth: params.linewidth)
   
   $('#creditInner').html('responds to: <b>swipe</b> — <b>pinch</b> — <b>tap</b> (on snowflake) — <b>double tap</b>') if iOS
   $('#creditOuter').show() if params.credits
@@ -62,7 +67,7 @@ $ ->
           oldV = newV
     vertices
   
-  window.verticesFromGeoJSON = (geoJSON, r = 40) ->
+  window.verticesFromGeoJSON = (geoJSON, r = 70) ->
     vertices = []
     for line in geoJSON.coordinates
       oldV = null
@@ -129,7 +134,7 @@ $ ->
       geom = new THREE.Geometry()
       geom.vertices = if @rootFrag then @rootFrag.vertices(@scale) else @logo
       geom.vertices.push(v(-5, 0, 0), v(5, 0, 0), v(0, -5, 0), v(0, 5, 0)) if showOrigin  # for debugging
-      @line = new THREE.Line(geom, lineMaterial, THREE.LinePieces)
+      @line = new THREE.Line(geom, snowMaterial, THREE.LinePieces)
       @line.position = new THREE.Vector3(randInRange(@xRange), @yRange[0], randInRange(@zRange))
       @line.rotation = new THREE.Vector3(randInRange(0, twoPi), randInRange(0, twoPi), randInRange(0, twoPi))
       @velocity = new THREE.Vector3(randInRange(-0.002, 0.002),  randInRange(-0.010, -0.011),  randInRange(-0.002, 0.002))
@@ -166,17 +171,17 @@ $ ->
   setSize()
   
   document.body.appendChild(renderer.domElement)
-  renderer.setClearColorHex((if params.inv == 1 then 0xffffff else 0x000022), 1.0)
+  renderer.setClearColorHex(bgColour, 1.0)
   renderer.clear()
   
   scene = new THREE.Scene()
   scene.add(camera)
-  scene.fog = new THREE.FogExp2((if params.inv == 1 then 0xffffff else 0x000022), 0.0025)
+  scene.fog = new THREE.FogExp2(bgColour, 0.0025)
   
   if params.globe
     globeGeom = new THREE.Geometry()
     globeGeom.vertices = verticesFromGeoJSON(window.globeGeoJSON)
-    globe = new THREE.Line(globeGeom, lineMaterial, THREE.LinePieces)
+    globe = new THREE.Line(globeGeom, globeMaterial, THREE.LinePieces)
     globe.rotation.z = 23.44 * piOver180
     scene.add(globe)
   

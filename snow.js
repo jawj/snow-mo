@@ -1,7 +1,7 @@
 (function() {
   var __slice = Array.prototype.slice;
   $(function() {
-    var Flake, FlakeFrag, animate, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, globe, globeGeom, halfPi, i, iOS, k, kvp, last, lastTapTime, lineMaterial, maxSpeedMultiplier, moved, oneThirdPi, origCamZoom, params, paused, piOver180, projector, randInRange, renderer, scene, setSize, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, wls, _i, _len, _ref, _ref2;
+    var Flake, FlakeFrag, animate, bgColour, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, globe, globeColour, globeGeom, globeMaterial, halfPi, i, iOS, k, kvp, last, lastTapTime, maxSpeedMultiplier, moved, oneThirdPi, origCamZoom, params, paused, piOver180, projector, randInRange, renderer, scene, setSize, snowColour, snowMaterial, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, wls, _i, _len, _ref, _ref2;
     if (!(window.WebGLRenderingContext && document.createElement('canvas').getContext('experimental-webgl'))) {
       $('#noWebGL').show();
       return;
@@ -39,8 +39,15 @@
         return _results;
       })()).join('&'));
     }
-    lineMaterial = new THREE.LineBasicMaterial({
-      color: (params.inv === 1 ? 0x666666 : 0xffffff),
+    snowColour = params.inv ? 0x666666 : 0xffffff;
+    globeColour = 0x999999;
+    bgColour = params.inv ? 0xffffee : 0x000022;
+    snowMaterial = new THREE.LineBasicMaterial({
+      color: snowColour,
+      linewidth: params.linewidth
+    });
+    globeMaterial = new THREE.LineBasicMaterial({
+      color: globeColour,
       linewidth: params.linewidth
     });
     if (iOS) {
@@ -105,7 +112,7 @@
     window.verticesFromGeoJSON = function(geoJSON, r) {
       var coords, cosLat, cosLon, lat, line, lon, newV, oldV, sinLat, sinLon, vertices, x, y, z, _j, _k, _len2, _len3, _ref2;
       if (r == null) {
-        r = 40;
+        r = 70;
       }
       vertices = [];
       _ref2 = geoJSON.coordinates;
@@ -227,7 +234,7 @@
         if (showOrigin) {
           geom.vertices.push(v(-5, 0, 0), v(5, 0, 0), v(0, -5, 0), v(0, 5, 0));
         }
-        this.line = new THREE.Line(geom, lineMaterial, THREE.LinePieces);
+        this.line = new THREE.Line(geom, snowMaterial, THREE.LinePieces);
         this.line.position = new THREE.Vector3(randInRange(this.xRange), this.yRange[0], randInRange(this.zRange));
         this.line.rotation = new THREE.Vector3(randInRange(0, twoPi), randInRange(0, twoPi), randInRange(0, twoPi));
         this.velocity = new THREE.Vector3(randInRange(-0.002, 0.002), randInRange(-0.010, -0.011), randInRange(-0.002, 0.002));
@@ -280,15 +287,15 @@
     };
     setSize();
     document.body.appendChild(renderer.domElement);
-    renderer.setClearColorHex((params.inv === 1 ? 0xffffff : 0x000022), 1.0);
+    renderer.setClearColorHex(bgColour, 1.0);
     renderer.clear();
     scene = new THREE.Scene();
     scene.add(camera);
-    scene.fog = new THREE.FogExp2((params.inv === 1 ? 0xffffff : 0x000022), 0.0025);
+    scene.fog = new THREE.FogExp2(bgColour, 0.0025);
     if (params.globe) {
       globeGeom = new THREE.Geometry();
       globeGeom.vertices = verticesFromGeoJSON(window.globeGeoJSON);
-      globe = new THREE.Line(globeGeom, lineMaterial, THREE.LinePieces);
+      globe = new THREE.Line(globeGeom, globeMaterial, THREE.LinePieces);
       globe.rotation.z = 23.44 * piOver180;
       scene.add(globe);
     }
