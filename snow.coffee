@@ -74,7 +74,7 @@ $ ->
       for coords in line
         lon = coords[0] * piOver180; lat = coords[1] * piOver180
         sinLat = Math.sin(lat); cosLat = Math.cos(lat); sinLon = Math.sin(lon); cosLon = Math.cos(lon)
-        x = r * cosLat * sinLon; z = r * cosLat * cosLon; y = r * sinLat
+        x = r * cosLat * sinLon; y = r * sinLat; z = r * cosLat * cosLon
         newV = v(x, y, z)
         vertices.push(oldV, newV) if oldV
         oldV = newV

@@ -128,8 +128,8 @@
           sinLon = Math.sin(lon);
           cosLon = Math.cos(lon);
           x = r * cosLat * sinLon;
-          z = r * cosLat * cosLon;
           y = r * sinLat;
+          z = r * cosLat * cosLon;
           newV = v(x, y, z);
           if (oldV) {
             vertices.push(oldV, newV);
