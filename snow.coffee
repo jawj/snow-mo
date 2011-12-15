@@ -212,7 +212,7 @@ $ ->
     wind = windT.t(0, windSpeed)
     if not paused
       flake.tick(dt, wind) for flake in flakes
-      globe.rotation.y += 0.005 if params.globe
+      globe.rotation.y += 0.001 if params.globe
     renderer.clear()
     camera.lookAt(scene.position)
     renderer.render(scene, camera)

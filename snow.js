@@ -338,7 +338,7 @@
           flake.tick(dt, wind);
         }
         if (params.globe) {
-          globe.rotation.y += 0.005;
+          globe.rotation.y += 0.001;
         }
       }
       renderer.clear();
