@@ -1,7 +1,7 @@
 (function() {
   var __slice = Array.prototype.slice;
   $(function() {
-    var Flake, FlakeFrag, animate, bgColour, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, globe, globeColour, globeGeom, globeMaterial, halfPi, i, iOS, k, kvp, last, lastTapTime, maxSpeedMultiplier, moved, oneThirdPi, origCamZoom, params, paused, piOver180, projector, randInRange, renderer, scene, setSize, snowColour, snowMaterial, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, wls, _i, _len, _ref, _ref2;
+    var Flake, FlakeFrag, animate, axialTilt, bgColour, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, globe, globeColour, globeGeom, globeMaterial, halfPi, i, iOS, k, kvp, last, lastTapTime, maxSpeedMultiplier, moved, oneThirdPi, origCamZoom, params, paused, piOver180, projector, randInRange, renderer, scene, setSize, snowColour, snowMaterial, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, wls, _i, _len, _ref, _ref2;
     if (!(window.WebGLRenderingContext && document.createElement('canvas').getContext('experimental-webgl'))) {
       $('#noWebGL').show();
       return;
@@ -291,12 +291,12 @@
     renderer.clear();
     scene = new THREE.Scene();
     scene.add(camera);
-    scene.fog = new THREE.FogExp2(bgColour, 0.0025);
+    scene.fog = new THREE.FogExp2(bgColour, 0.00275);
+    axialTilt = 23.44 * piOver180;
     if (params.globe) {
       globeGeom = new THREE.Geometry();
       globeGeom.vertices = verticesFromGeoJSON(window.globeGeoJSON);
       globe = new THREE.Line(globeGeom, globeMaterial, THREE.LinePieces);
-      globe.rotation.z = 23.44 * piOver180;
       scene.add(globe);
     }
     projector = new THREE.Projector();
@@ -339,6 +339,7 @@
         }
         if (params.globe) {
           globe.rotation.y += 0.001;
+          globe.rotation.x = axialTilt;
         }
       }
       renderer.clear();
