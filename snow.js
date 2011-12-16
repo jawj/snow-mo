@@ -1,7 +1,12 @@
 (function() {
-  var __slice = Array.prototype.slice;
+  var __hasProp = Object.prototype.hasOwnProperty, __indexOf = Array.prototype.indexOf || function(item) {
+    for (var i = 0, l = this.length; i < l; i++) {
+      if (this[i] === item) return i;
+    }
+    return -1;
+  }, __slice = Array.prototype.slice;
   $(function() {
-    var Flake, FlakeFrag, animate, axialTilt, bgColour, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, globe, globeColour, globeGeom, globeMaterial, halfPi, i, iOS, k, kvp, last, lastTapTime, maxSpeedMultiplier, moved, oneThirdPi, origCamZoom, params, paused, piOver180, projector, randInRange, renderer, scene, setSize, snowColour, snowMaterial, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, wls, _i, _len, _ref, _ref2;
+    var Flake, FlakeFrag, animate, axialTilt, bgColour, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, filterObject, flake, flakeXpode, flakes, globe, globeColour, globeGeom, globeMaterial, halfPi, i, iOS, k, kvp, last, lastTapTime, maxSpeedMultiplier, moved, nodeEventName, nodeLogging, observedEvents, oneThirdPi, origCamZoom, params, paused, piOver180, projector, randInRange, receive, renderer, scene, self, send, setSize, snowColour, snowMaterial, socket, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, wls, _i, _len, _ref, _ref2;
     if (!(window.WebGLRenderingContext && document.createElement('canvas').getContext('experimental-webgl'))) {
       $('#noWebGL').show();
       return;
@@ -13,7 +18,7 @@
       }), 60 * 60 * 1000);
     }
     params = {
-      flakes: 125,
+      flakes: 200,
       speed: 1,
       linewidth: 1,
       stats: 0,
@@ -41,7 +46,7 @@
     }
     snowColour = params.inv ? 0x666666 : 0xffffff;
     globeColour = 0x999999;
-    bgColour = params.inv ? 0xffffee : 0x000022;
+    bgColour = params.inv ? 0xffffee : 0x000011;
     snowMaterial = new THREE.LineBasicMaterial({
       color: snowColour,
       linewidth: params.linewidth
@@ -68,6 +73,18 @@
     piOver180 = Math.PI / 180;
     v = function(x, y, z) {
       return new THREE.Vertex(new THREE.Vector3(x, y, z));
+    };
+    filterObject = function(obj, keepKeys) {
+      var filtered, k, v;
+      filtered = {};
+      for (k in obj) {
+        if (!__hasProp.call(obj, k)) continue;
+        v = obj[k];
+        if (__indexOf.call(keepKeys, k) >= 0) {
+          filtered[k] = v;
+        }
+      }
+      return filtered;
     };
     randInRange = function() {
       var range;
@@ -221,7 +238,7 @@
         }
         this.scale = randInRange(3, 6);
         maxLevel = Math.random() < 0.4 ? 3 : 2;
-        if (Math.random() < 0.5 / params.flakes) {
+        if (Math.random() < 1 / params.flakes) {
           this.rootFrag = null;
           this.size = 40;
         } else {
@@ -273,6 +290,59 @@
       };
       return Flake;
     })();
+    socket = io.connect('http://10.0.1.80', {
+      port: 9999
+    });
+    self = ('' + Math.random()).replace('0.', '');
+    nodeEventName = 'snow-mo-event';
+    observedEvents = [];
+    nodeLogging = false;
+    send = function(event, data) {
+      if (data == null) {
+        data = {};
+      }
+      if (nodeLogging) {
+        if (typeof console !== "undefined" && console !== null) {
+          console.log("Sent " + event + " event with data " + (JSON.stringify(data)));
+        }
+      }
+      return socket.emit(nodeEventName, {
+        self: self,
+        event: event,
+        data: data
+      });
+    };
+    receive = function(event, func, ignoreOwn) {
+      var spec;
+      if (ignoreOwn == null) {
+        ignoreOwn = false;
+      }
+      spec = {
+        event: event,
+        func: func,
+        ignoreOwn: ignoreOwn
+      };
+      if (nodeLogging) {
+        if (typeof console !== "undefined" && console !== null) {
+          console.log("Registered to receive " + (JSON.stringify(spec)));
+        }
+      }
+      return observedEvents.push(spec);
+    };
+    socket.on(nodeEventName, function(data) {
+      var event, _j, _len2, _results;
+      if (nodeLogging) {
+        if (typeof console !== "undefined" && console !== null) {
+          console.log("Received " + data.event + " event from client " + data.self + " with data " + (JSON.stringify(data.data)));
+        }
+      }
+      _results = [];
+      for (_j = 0, _len2 = observedEvents.length; _j < _len2; _j++) {
+        event = observedEvents[_j];
+        _results.push(data.event === event.event && (!event.ignoreOwn || data.self !== self) ? (nodeLogging ? console.log('Event triggered') : void 0, event.func(data.data)) : void 0);
+      }
+      return _results;
+    });
     dvp = (_ref2 = window.devicePixelRatio) != null ? _ref2 : 1;
     renderer = new THREE.WebGLRenderer({
       antialias: true
@@ -357,9 +427,11 @@
     toggleSpeed = function() {
       return speed = speed === params.speed ? params.speed * maxSpeedMultiplier : params.speed;
     };
+    receive('toggleSpeed', toggleSpeed);
     togglePause = function() {
       return paused = !paused;
     };
+    receive('togglePause', togglePause);
     explodeAll = function(ev) {
       var flake, _j, _len2, _results;
       _results = [];
@@ -369,6 +441,11 @@
       }
       return _results;
     };
+    receive('explodeAll', function(data) {
+      return explodeAll({
+        shiftKey: data.shiftKey
+      });
+    });
     $(document).on('keyup', function(ev) {
       var _ref3;
       if ((_ref3 = ev.keyCode) !== 32 && _ref3 !== 80 && _ref3 !== 27) {
@@ -377,11 +454,13 @@
       ev.preventDefault();
       switch (ev.keyCode) {
         case 32:
-          return toggleSpeed();
+          return send('toggleSpeed');
         case 80:
-          return togglePause();
+          return send('togglePause');
         case 27:
-          return explodeAll(ev);
+          return send('explodeAll', {
+            shiftKey: ev.shiftKey
+          });
       }
     });
     flakeXpode = function(ev) {
@@ -439,35 +518,55 @@
     };
     $(renderer.domElement).on('mousemove', windChange);
     startCamPan = function(ev) {
-      if (ev.originalEvent.touches && ev.originalEvent.touches.length !== 1) {
-        stopCamPan();
-        return;
-      }
       down = true;
       moved = 0;
       sx = ev.clientX || ev.originalEvent.touches[0].clientX;
       return sy = ev.clientY || ev.originalEvent.touches[0].clientY;
     };
-    $(renderer.domElement).on('mousedown touchstart touchend touchcancel', startCamPan);
+    $(renderer.domElement).on('mousedown touchstart touchend touchcancel', function(ev) {
+      var filteredEv;
+      filteredEv = filterObject(ev, ['clientX', 'clientY']);
+      filteredEv.originalEvent = {
+        touches: (ev.originalEvent.touches != null ? [filterObject(ev.originalEvent.touches[0], ['clientX', 'clientY'])] : null)
+      };
+      if (ev.originalEvent.touches && ev.originalEvent.touches.length !== 1) {
+        return send('stopCamPan');
+      } else {
+        return send('startCamPan', filteredEv);
+      }
+    });
+    receive('startCamPan', startCamPan);
     stopCamPan = function() {
       return down = false;
     };
-    $(renderer.domElement).on('mouseup', stopCamPan);
+    $(renderer.domElement).on('mouseup', function() {
+      return send('stopCamPan');
+    });
+    receive('stopCamPan', stopCamPan);
     doCamPan = function(ev) {
       var dx, dy, rotation;
-      if (down) {
-        moved += 1;
-        dx = (ev.clientX || ev.originalEvent.touches[0].clientX) - sx;
-        dy = (ev.clientY || ev.originalEvent.touches[0].clientY) - sy;
-        rotation = dx * -0.0005 * Math.log(camZ);
-        camT.rotate(rotation);
-        windT.rotate(rotation);
-        updateCamPos();
-        sx += dx;
-        return sy += dy;
-      }
+      moved += 1;
+      dx = (ev.clientX || ev.originalEvent.touches[0].clientX) - sx;
+      dy = (ev.clientY || ev.originalEvent.touches[0].clientY) - sy;
+      rotation = dx * -0.0005 * Math.log(camZ);
+      camT.rotate(rotation);
+      windT.rotate(rotation);
+      updateCamPos();
+      sx += dx;
+      return sy += dy;
     };
-    $(renderer.domElement).on('mousemove touchmove', doCamPan);
+    $(renderer.domElement).on('mousemove touchmove', function(ev) {
+      var filteredEv;
+      if (down) {
+        doCamPan(ev);
+        filteredEv = filterObject(ev, ['clientX', 'clientY']);
+        filteredEv.originalEvent = {
+          touches: (ev.originalEvent.touches != null ? [filterObject(ev.originalEvent.touches[0], ['clientX', 'clientY'])] : null)
+        };
+        return send('doCamPan', filteredEv);
+      }
+    });
+    receive('doCamPan', doCamPan, true);
     doCamZoom = function(ev, d, dX, dY) {
       var newCamZoom;
       if (dY != null) {

@@ -8,7 +8,7 @@ $ ->
   setTimeout((-> window.location.reload()), 60 * 60 * 1000) if iOS  # work around memory leak?
   
   params = 
-    flakes:    125
+    flakes:    200
     speed:     1
     linewidth: 1
     stats:     0
@@ -24,7 +24,7 @@ $ ->
   
   snowColour = if params.inv then 0x666666 else 0xffffff
   globeColour = 0x999999
-  bgColour = if params.inv then 0xffffee else 0x000022
+  bgColour = if params.inv then 0xffffee else 0x000011
   
   snowMaterial  = new THREE.LineBasicMaterial(color: snowColour,  linewidth: params.linewidth)
   globeMaterial = new THREE.LineBasicMaterial(color: globeColour, linewidth: params.linewidth)
@@ -43,7 +43,13 @@ $ ->
   oneThirdPi = Math.PI / 3
   piOver180 = Math.PI / 180
   v = (x, y, z) -> new THREE.Vertex(new THREE.Vector3(x, y, z))
-
+  
+  filterObject = (obj, keepKeys) ->
+    filtered = {}
+    for own k, v of obj
+      filtered[k] = v if k in keepKeys
+    filtered
+  
   randInRange = (range...) ->
     # accepts either 2 numeric args -- min, max -- or one array arg -- [min, max]
     range = range[0] unless typeof(range[0]) == 'number'
@@ -124,7 +130,7 @@ $ ->
       scene.remove(@line) if @line  # always need a new object, not just __dirtyVertices = yes, because length may have changed (https://github.com/mrdoob/three.js/wiki/Updates)
       @scale = randInRange(3, 6)
       maxLevel = if Math.random() < 0.4 then 3 else 2
-      if Math.random() < 0.5 / params.flakes
+      if Math.random() < 1 / params.flakes
         @rootFrag = null
         @size = 40
       else 
@@ -159,6 +165,25 @@ $ ->
       else
         window.open('http://casa.ucl.ac.uk', 'casa') unless iOS
 
+  socket = io.connect('http://10.0.1.80', port: 9999)
+  self = ('' + Math.random()).replace('0.', '')
+  nodeEventName = 'snow-mo-event'
+  observedEvents = []
+  nodeLogging = no
+  send = (event, data = {}) -> 
+    console?.log("Sent #{event} event with data #{JSON.stringify(data)}") if nodeLogging
+    socket.emit(nodeEventName, self: self, event: event, data: data)
+  receive = (event, func, ignoreOwn = no) -> 
+    spec = {event: event, func: func, ignoreOwn: ignoreOwn}
+    console?.log("Registered to receive #{JSON.stringify(spec)}") if nodeLogging
+    observedEvents.push(spec)  # spec = {event, func, ignoreOwn}
+  socket.on nodeEventName, (data) ->
+    console?.log("Received #{data.event} event from client #{data.self} with data #{JSON.stringify(data.data)}") if nodeLogging
+    for event in observedEvents
+      if data.event is event.event and (not event.ignoreOwn or data.self isnt self)
+        console.log('Event triggered') if nodeLogging
+        event.func(data.data)
+  
   dvp = window.devicePixelRatio ? 1
   renderer = new THREE.WebGLRenderer(antialias: true)
   camera = new THREE.PerspectiveCamera(33, 1, 1, 10000)  # aspect (2nd param) shortly to be overridden...
@@ -229,16 +254,21 @@ $ ->
   $(window).on 'resize', setSize
   
   toggleSpeed = -> speed = if speed == params.speed then params.speed * maxSpeedMultiplier else params.speed
+  receive('toggleSpeed', toggleSpeed)
+  
   togglePause = -> paused = not paused
+  receive('togglePause', togglePause)
+  
   explodeAll = (ev) -> (flake.click(ev) if flake.rootFrag) for flake in flakes
+  receive('explodeAll', (data) -> explodeAll(shiftKey: data.shiftKey))
   
   $(document).on 'keyup', (ev) ->
     return unless ev.keyCode in [32, 80, 27]
     ev.preventDefault()
     switch ev.keyCode
-      when 32 then toggleSpeed()   # space
-      when 80 then togglePause()   # p
-      when 27 then explodeAll(ev)  # esc
+      when 32 then send('toggleSpeed')                        # space
+      when 80 then send('togglePause')                        # p
+      when 27 then send('explodeAll', shiftKey: ev.shiftKey)  # esc
   
   flakeXpode = (ev) ->
     return if moved > 3  # number of mousemove events, threshold for deciding user meant to drag not click
@@ -275,29 +305,39 @@ $ ->
   $(renderer.domElement).on 'mousemove', windChange
 
   startCamPan = (ev) ->
-    if ev.originalEvent.touches and ev.originalEvent.touches.length != 1  # ? operator not helpful here!
-      stopCamPan()
-      return
     down = yes
     moved = 0
     sx = (ev.clientX || ev.originalEvent.touches[0].clientX); sy = (ev.clientY || ev.originalEvent.touches[0].clientY)
-  $(renderer.domElement).on 'mousedown touchstart touchend touchcancel', startCamPan
+  $(renderer.domElement).on 'mousedown touchstart touchend touchcancel', (ev) ->
+    filteredEv = filterObject(ev, ['clientX', 'clientY'])
+    filteredEv.originalEvent = {touches: (if ev.originalEvent.touches? then [filterObject(ev.originalEvent.touches[0], ['clientX', 'clientY'])] else null)}
+    if ev.originalEvent.touches and ev.originalEvent.touches.length != 1  # ? operator not helpful here!
+      send('stopCamPan')
+    else
+      send('startCamPan', filteredEv)
+  receive('startCamPan', startCamPan)
   
   stopCamPan = -> 
     down = no
     # momentum?
-  $(renderer.domElement).on 'mouseup', stopCamPan
+  $(renderer.domElement).on 'mouseup', -> send('stopCamPan')
+  receive('stopCamPan', stopCamPan)
   
   doCamPan = (ev) ->
+    moved += 1
+    dx = (ev.clientX || ev.originalEvent.touches[0].clientX) - sx; dy = (ev.clientY || ev.originalEvent.touches[0].clientY) - sy
+    rotation = dx * -0.0005 * Math.log(camZ)
+    camT.rotate(rotation)
+    windT.rotate(rotation)
+    updateCamPos()
+    sx += dx; sy += dy
+  $(renderer.domElement).on 'mousemove touchmove', (ev) ->
     if down
-      moved += 1
-      dx = (ev.clientX || ev.originalEvent.touches[0].clientX) - sx; dy = (ev.clientY || ev.originalEvent.touches[0].clientY) - sy
-      rotation = dx * -0.0005 * Math.log(camZ)
-      camT.rotate(rotation)
-      windT.rotate(rotation)
-      updateCamPos()
-      sx += dx; sy += dy
-  $(renderer.domElement).on 'mousemove touchmove', doCamPan
+      doCamPan(ev)
+      filteredEv = filterObject(ev, ['clientX', 'clientY'])
+      filteredEv.originalEvent = {touches: (if ev.originalEvent.touches? then [filterObject(ev.originalEvent.touches[0], ['clientX', 'clientY'])] else null)}
+      send('doCamPan', filteredEv)
+  receive('doCamPan', doCamPan, yes)
   
   doCamZoom = (ev, d, dX, dY) ->
     if dY? then camZ -= dY * 5
