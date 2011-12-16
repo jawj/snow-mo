@@ -8,7 +8,7 @@ $ ->
   setTimeout((-> window.location.reload()), 60 * 60 * 1000) if iOS  # work around memory leak?
   
   params = 
-    flakes:    125
+    flakes:    200
     speed:     1
     linewidth: 1
     stats:     0
@@ -24,7 +24,7 @@ $ ->
   
   snowColour = if params.inv then 0x666666 else 0xffffff
   globeColour = 0x999999
-  bgColour = if params.inv then 0xffffee else 0x000022
+  bgColour = if params.inv then 0xffffff else 0x000011
   
   snowMaterial  = new THREE.LineBasicMaterial(color: snowColour,  linewidth: params.linewidth)
   globeMaterial = new THREE.LineBasicMaterial(color: globeColour, linewidth: params.linewidth)

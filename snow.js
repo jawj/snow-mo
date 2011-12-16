@@ -13,7 +13,7 @@
       }), 60 * 60 * 1000);
     }
     params = {
-      flakes: 125,
+      flakes: 200,
       speed: 1,
       linewidth: 1,
       stats: 0,
@@ -41,7 +41,7 @@
     }
     snowColour = params.inv ? 0x666666 : 0xffffff;
     globeColour = 0x999999;
-    bgColour = params.inv ? 0xffffee : 0x000022;
+    bgColour = params.inv ? 0xffffff : 0x000011;
     snowMaterial = new THREE.LineBasicMaterial({
       color: snowColour,
       linewidth: params.linewidth
