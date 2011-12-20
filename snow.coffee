@@ -14,7 +14,6 @@ $ ->
     stats:     0
     credits:   1
     inv:       0
-    globe:     0
   
   wls = window.location.search
   if wls.length > 0
@@ -23,11 +22,9 @@ $ ->
     window.location.replace(window.location.href + '?' + ("#{k}=#{v}" for k, v of params).join('&'))
   
   snowColour = if params.inv then 0x666666 else 0xffffff
-  globeColour = 0x999999
   bgColour = if params.inv then 0xffffff else 0x000011
   
   snowMaterial  = new THREE.LineBasicMaterial(color: snowColour,  linewidth: params.linewidth)
-  globeMaterial = new THREE.LineBasicMaterial(color: globeColour, linewidth: params.linewidth)
   
   $('#creditInner').html('responds to: <b>swipe</b> — <b>pinch</b> — <b>tap</b> (on snowflake) — <b>double tap</b>') if iOS
   $('#creditOuter').show() if params.credits
@@ -66,20 +63,7 @@ $ ->
           vertices.push(oldV, newV)
           oldV = newV
     vertices
-  
-  window.verticesFromGeoJSON = (geoJSON, r = 70) ->  # takes a single MULTILINESTRING
-    vertices = []
-    for line in geoJSON.coordinates
-      oldV = null
-      for coords in line
-        lon = coords[0] * piOver180; lat = coords[1] * piOver180
-        sinLat = Math.sin(lat); cosLat = Math.cos(lat); sinLon = Math.sin(lon); cosLon = Math.cos(lon)
-        x = r * cosLat * sinLon; y = r * sinLat; z = r * cosLat * cosLon
-        newV = v(x, y, z)
-        vertices.push(oldV, newV) if oldV
-        oldV = newV
-    vertices
-  
+
   class FlakeFrag
     constructor: (maxLevel, level = 0) ->
       @x = if level == 0 then 0 else Math.random()
@@ -177,15 +161,7 @@ $ ->
   scene = new THREE.Scene()
   scene.add(camera)
   scene.fog = new THREE.FogExp2(bgColour, 0.00275)
-  
-  axialTilt = 23.44 * piOver180
-  if params.globe
-    globeGeom = new THREE.Geometry()
-    # window.globeGeoJSON.coordinates.push([[0,90],[0,-90]])  # show axis
-    globeGeom.vertices = verticesFromGeoJSON(window.globeGeoJSON)
-    globe = new THREE.Line(globeGeom, globeMaterial, THREE.LinePieces)
-    scene.add(globe)
-  
+
   projector = new THREE.Projector()
   
   flakes = flakes = for i in [0...params.flakes]
@@ -213,9 +189,6 @@ $ ->
     wind = windT.t(0, windSpeed)
     if not paused
       flake.tick(dt, wind) for flake in flakes
-      if params.globe
-        globe.rotation.y += 0.001
-        globe.rotation.x = axialTilt
     renderer.clear()
     camera.lookAt(scene.position)
     renderer.render(scene, camera)

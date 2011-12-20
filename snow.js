@@ -1,7 +1,8 @@
 (function() {
   var __slice = Array.prototype.slice;
+
   $(function() {
-    var Flake, FlakeFrag, animate, axialTilt, bgColour, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, globe, globeColour, globeGeom, globeMaterial, halfPi, i, iOS, k, kvp, last, lastTapTime, maxSpeedMultiplier, moved, oneThirdPi, origCamZoom, params, paused, piOver180, projector, randInRange, renderer, scene, setSize, snowColour, snowMaterial, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, wls, _i, _len, _ref, _ref2;
+    var Flake, FlakeFrag, animate, bgColour, camT, camZ, camZRange, camera, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, halfPi, i, iOS, k, kvp, last, lastTapTime, maxSpeedMultiplier, moved, oneThirdPi, origCamZoom, params, paused, piOver180, projector, randInRange, renderer, scene, setSize, snowColour, snowMaterial, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, wls, _i, _len, _ref, _ref2;
     if (!(window.WebGLRenderingContext && document.createElement('canvas').getContext('experimental-webgl'))) {
       $('#noWebGL').show();
       return;
@@ -18,8 +19,7 @@
       linewidth: 1,
       stats: 0,
       credits: 1,
-      inv: 0,
-      globe: 0
+      inv: 0
     };
     wls = window.location.search;
     if (wls.length > 0) {
@@ -40,22 +40,15 @@
       })()).join('&'));
     }
     snowColour = params.inv ? 0x666666 : 0xffffff;
-    globeColour = 0x999999;
     bgColour = params.inv ? 0xffffff : 0x000011;
     snowMaterial = new THREE.LineBasicMaterial({
       color: snowColour,
       linewidth: params.linewidth
     });
-    globeMaterial = new THREE.LineBasicMaterial({
-      color: globeColour,
-      linewidth: params.linewidth
-    });
     if (iOS) {
       $('#creditInner').html('responds to: <b>swipe</b> — <b>pinch</b> — <b>tap</b> (on snowflake) — <b>double tap</b>');
     }
-    if (params.credits) {
-      $('#creditOuter').show();
-    }
+    if (params.credits) $('#creditOuter').show();
     if (params.stats) {
       stats = new Stats();
       stats.domElement.id = 'stats';
@@ -72,16 +65,12 @@
     randInRange = function() {
       var range;
       range = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      if (typeof range[0] !== 'number') {
-        range = range[0];
-      }
+      if (typeof range[0] !== 'number') range = range[0];
       return range[0] + Math.random() * (range[1] - range[0]);
     };
     verticesFromSVGPaths = function(svg, t) {
       var c, cmd, d, ds, dummy, matches, newV, oldV, origV, re, vertices, x, y, _j, _len2;
-      if (t == null) {
-        t = new Transform();
-      }
+      if (t == null) t = new Transform();
       ds = [];
       re = /d\s*=\s*("|')([^"']+)("|')/g;
       while ((matches = re.exec(svg)) != null) {
@@ -99,9 +88,7 @@
           if (cmd === 'M') {
             origV = oldV = newV;
           } else {
-            if (cmd !== 'L') {
-              newV = origV;
-            }
+            if (cmd !== 'L') newV = origV;
             vertices.push(oldV, newV);
             oldV = newV;
           }
@@ -109,47 +96,14 @@
       }
       return vertices;
     };
-    window.verticesFromGeoJSON = function(geoJSON, r) {
-      var coords, cosLat, cosLon, lat, line, lon, newV, oldV, sinLat, sinLon, vertices, x, y, z, _j, _k, _len2, _len3, _ref2;
-      if (r == null) {
-        r = 70;
-      }
-      vertices = [];
-      _ref2 = geoJSON.coordinates;
-      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
-        line = _ref2[_j];
-        oldV = null;
-        for (_k = 0, _len3 = line.length; _k < _len3; _k++) {
-          coords = line[_k];
-          lon = coords[0] * piOver180;
-          lat = coords[1] * piOver180;
-          sinLat = Math.sin(lat);
-          cosLat = Math.cos(lat);
-          sinLon = Math.sin(lon);
-          cosLon = Math.cos(lon);
-          x = r * cosLat * sinLon;
-          y = r * sinLat;
-          z = r * cosLat * cosLon;
-          newV = v(x, y, z);
-          if (oldV) {
-            vertices.push(oldV, newV);
-          }
-          oldV = newV;
-        }
-      }
-      return vertices;
-    };
     FlakeFrag = (function() {
+
       function FlakeFrag(maxLevel, level) {
         var i, maxKids;
-        if (level == null) {
-          level = 0;
-        }
+        if (level == null) level = 0;
         this.x = level === 0 ? 0 : Math.random();
         this.y = level === 0 ? 0 : Math.random();
-        if (level >= maxLevel) {
-          return;
-        }
+        if (level >= maxLevel) return;
         maxKids = level === 0 ? 1 : 3;
         this.kids = (function() {
           var _ref2, _results;
@@ -160,11 +114,10 @@
           return _results;
         })();
       }
+
       FlakeFrag.prototype.vertices = function(scale, explodeness) {
         var i, j, t, vertices, _j, _len2, _ref2;
-        if (explodeness == null) {
-          explodeness = 0;
-        }
+        if (explodeness == null) explodeness = 0;
         vertices = [];
         t = new Transform();
         t.scale(scale, scale);
@@ -179,11 +132,10 @@
         }
         return vertices;
       };
+
       FlakeFrag.prototype._vertices = function(vertices, t, explodeness) {
         var c, commonV, kid, _j, _len2, _ref2;
-        if (!this.kids) {
-          return;
-        }
+        if (!this.kids) return;
         t.translate(this.x + explodeness, this.y + explodeness);
         c = t.t(0, 0);
         commonV = v(c[0], c[1], 0);
@@ -196,29 +148,37 @@
         }
         return t.translate(-this.x - explodeness, -this.y - explodeness);
       };
+
       return FlakeFrag;
+
     })();
     Flake = (function() {
       var t;
+
       Flake.prototype.xRange = [-150, 150];
+
       Flake.prototype.yRange = [150, -150];
+
       Flake.prototype.zRange = [-150, 150];
+
       Flake.prototype.explodeSpeed = 0.003;
+
       t = new Transform();
+
       t.translate(-16, 22);
+
       t.scale(0.5, -0.5);
+
       Flake.prototype.logo = verticesFromSVGPaths(window.logoSvg, t);
+
       function Flake() {
         this.reset();
       }
+
       Flake.prototype.reset = function(showOrigin) {
         var geom, maxLevel;
-        if (showOrigin == null) {
-          showOrigin = false;
-        }
-        if (this.line) {
-          scene.remove(this.line);
-        }
+        if (showOrigin == null) showOrigin = false;
+        if (this.line) scene.remove(this.line);
         this.scale = randInRange(3, 6);
         maxLevel = Math.random() < 0.4 ? 3 : 2;
         if (Math.random() < 0.5 / params.flakes) {
@@ -241,6 +201,7 @@
         this.rotality = new THREE.Vector3(randInRange(-0.0003, 0.0003), randInRange(-0.0003, 0.0003), randInRange(-0.0003, 0.0003));
         return scene.add(this.line);
       };
+
       Flake.prototype.tick = function(dt, wind) {
         var pos, rly, rot, vel;
         pos = this.line.position;
@@ -258,20 +219,19 @@
           this.line.geometry.vertices = this.rootFrag.vertices(this.scale, this.explodedness);
           this.line.geometry.__dirtyVertices = true;
         }
-        if (pos.y < this.yRange[1]) {
-          return this.reset();
-        }
+        if (pos.y < this.yRange[1]) return this.reset();
       };
+
       Flake.prototype.click = function(ev) {
         if (this.rootFrag) {
           return this.explodingness = ev.shiftKey ? -1 : 1;
         } else {
-          if (!iOS) {
-            return window.open('http://casa.ucl.ac.uk', 'casa');
-          }
+          if (!iOS) return window.open('http://casa.ucl.ac.uk', 'casa');
         }
       };
+
       return Flake;
+
     })();
     dvp = (_ref2 = window.devicePixelRatio) != null ? _ref2 : 1;
     renderer = new THREE.WebGLRenderer({
@@ -292,13 +252,6 @@
     scene = new THREE.Scene();
     scene.add(camera);
     scene.fog = new THREE.FogExp2(bgColour, 0.00275);
-    axialTilt = 23.44 * piOver180;
-    if (params.globe) {
-      globeGeom = new THREE.Geometry();
-      globeGeom.vertices = verticesFromGeoJSON(window.globeGeoJSON);
-      globe = new THREE.Line(globeGeom, globeMaterial, THREE.LinePieces);
-      scene.add(globe);
-    }
     projector = new THREE.Projector();
     flakes = flakes = (function() {
       var _ref3, _results;
@@ -328,18 +281,12 @@
     animate = function(t) {
       var dt, flake, wind, _j, _len2;
       dt = (t - last) * speed;
-      if (dt > 1000) {
-        dt = 30;
-      }
+      if (dt > 1000) dt = 30;
       wind = windT.t(0, windSpeed);
       if (!paused) {
         for (_j = 0, _len2 = flakes.length; _j < _len2; _j++) {
           flake = flakes[_j];
           flake.tick(dt, wind);
-        }
-        if (params.globe) {
-          globe.rotation.y += 0.001;
-          globe.rotation.x = axialTilt;
         }
       }
       renderer.clear();
@@ -347,9 +294,7 @@
       renderer.render(scene, camera);
       last = t;
       window.requestAnimationFrame(animate, renderer.domElement);
-      if (params.stats) {
-        return stats.update();
-      }
+      if (params.stats) return stats.update();
     };
     updateCamPos();
     animate(new Date().getTime());
@@ -365,15 +310,13 @@
       _results = [];
       for (_j = 0, _len2 = flakes.length; _j < _len2; _j++) {
         flake = flakes[_j];
-        _results.push((flake.rootFrag ? flake.click(ev) : void 0));
+        _results.push(flake.rootFrag ? flake.click(ev) : void 0);
       }
       return _results;
     };
     $(document).on('keyup', function(ev) {
       var _ref3;
-      if ((_ref3 = ev.keyCode) !== 32 && _ref3 !== 80 && _ref3 !== 27) {
-        return;
-      }
+      if ((_ref3 = ev.keyCode) !== 32 && _ref3 !== 80 && _ref3 !== 27) return;
       ev.preventDefault();
       switch (ev.keyCode) {
         case 32:
@@ -386,9 +329,7 @@
     });
     flakeXpode = function(ev) {
       var eventX, eventY, flake, intersects, mesh, meshMaterial, meshes, ray, vector, _j, _len2, _results;
-      if (moved > 3) {
-        return;
-      }
+      if (moved > 3) return;
       eventX = ev.clientX || ev.originalEvent.touches[0].clientX;
       eventY = ev.clientY || ev.originalEvent.touches[0].clientY;
       vector = new THREE.Vector3((eventX / window.innerWidth) * 2 - 1, -(eventY / window.innerHeight) * 2 + 1, 0.5);
@@ -428,9 +369,7 @@
       var now, tapGap;
       now = new Date().getTime();
       tapGap = now - lastTapTime;
-      if (tapGap < 250 && ev.originalEvent.touches.length < 2) {
-        toggleSpeed();
-      }
+      if (tapGap < 250 && ev.originalEvent.touches.length < 2) toggleSpeed();
       return lastTapTime = now;
     };
     $(renderer.domElement).on('touchstart', doubleTapDetect);
@@ -487,4 +426,5 @@
     };
     return $(renderer.domElement).on('gesturestart', startCamZoom);
   });
+
 }).call(this);
