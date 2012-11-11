@@ -24,7 +24,8 @@ $ ->
   snowColour = if params.inv then 0x666666 else 0xffffff
   bgColour = if params.inv then 0xffffff else 0x000011
   
-  snowMaterial  = new THREE.LineBasicMaterial(color: snowColour,  linewidth: params.linewidth)
+  snowMaterial = new THREE.LineBasicMaterial(color: snowColour,  linewidth: params.linewidth)
+  meshMaterial = new THREE.MeshBasicMaterial(color: 0x888888, side: THREE.DoubleSide)  # used in click intersection testing
   
   $('#creditInner').html('responds to: <b>swipe</b> — <b>pinch</b> — <b>tap</b> (on snowflake) — <b>double tap</b>') if iOS
   $('#creditOuter').show() if params.credits
@@ -39,7 +40,7 @@ $ ->
   halfPi = Math.PI / 2
   oneThirdPi = Math.PI / 3
   piOver180 = Math.PI / 180
-  v = (x, y, z) -> new THREE.Vertex(new THREE.Vector3(x, y, z))
+  v = (x, y, z) -> new THREE.Vector3(x, y, z)
 
   randInRange = (range...) ->
     # accepts either 2 numeric args -- min, max -- or one array arg -- [min, max]
@@ -131,10 +132,10 @@ $ ->
       rot = @line.rotation; rly = @rotality
       rot.x += rly.x * dt; rot.y += rly.y * dt; rot.z += rly.z * dt
       # could use Vector3 add/clone/multiplyScalar methods -- but the above is probably faster
-      if @rootFrag and @explodingness != 0
+      if @rootFrag and @explodingness isnt 0
         @explodedness += @explodingness * @explodeSpeed * dt
         @line.geometry.vertices = @rootFrag.vertices(@scale, @explodedness)
-        @line.geometry.__dirtyVertices = yes
+        @line.geometry.verticesNeedUpdate = yes
       @reset() if pos.y < @yRange[1]
         
     click: (ev) ->
@@ -160,7 +161,7 @@ $ ->
   
   scene = new THREE.Scene()
   scene.add(camera)
-  scene.fog = new THREE.FogExp2(bgColour, 0.00275)
+  scene.fog = new THREE.FogExp2(bgColour, 0.0028)
 
   projector = new THREE.Projector()
   
@@ -220,10 +221,8 @@ $ ->
     vector = new THREE.Vector3((eventX / window.innerWidth) * 2 - 1, - (eventY / window.innerHeight) * 2 + 1, 0.5)
     projector.unprojectVector(vector, camera)
     ray = new THREE.Ray(camera.position, vector.subSelf(camera.position).normalize())
-    meshMaterial = null  # new THREE.MeshBasicMaterial(0x888888)  # material needed only for debugging, since never normally rendered
     meshes = for flake in flakes
       mesh = new THREE.Mesh(new THREE.PlaneGeometry(flake.size, flake.size), meshMaterial)
-      mesh.doubleSided = yes
       mesh.position = flake.line.position
       mesh.rotation = flake.line.rotation
       mesh.flake = flake  # for later reference
@@ -231,7 +230,7 @@ $ ->
       mesh
     scene.updateMatrixWorld()
     intersects = ray.intersectObjects(meshes)
-    if intersects.length
+    if intersects.length > 0
       flake = intersects[0].object.flake
       flake.click(ev)
     scene.remove(mesh) for mesh in meshes
@@ -244,7 +243,7 @@ $ ->
     lastTapTime = now
   $(renderer.domElement).on 'touchstart', doubleTapDetect
 
-  windChange = (ev) -> windSpeed = (ev.clientX / window.innerWidth - 0.5) * 0.125
+  windChange = (ev) -> windSpeed = (ev.clientX / window.innerWidth - 0.5) * 0.15
   $(renderer.domElement).on 'mousemove', windChange
 
   startCamPan = (ev) ->

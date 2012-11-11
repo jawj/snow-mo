@@ -7,7 +7,7 @@ html.gsub!(%r{<script src="[^/"]+"></script>}) do |tag|
   src = if js.match(/\.min\./)
     open(js) { |f| f.read }
   else
-    `java -jar ~/bin/closure-compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --js '#{js}'`
+    `java -jar /usr/local/closure-compiler/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --js '#{js}'`
   end
   "<script> // #{js}\n#{src.strip}\n</script>" 
 end
