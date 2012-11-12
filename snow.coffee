@@ -4,9 +4,6 @@ $ ->
     $('#noWebGL').show()
     return
   
-  iOS = navigator.appVersion.match /iPhone|iPad/
-  setTimeout (-> window.location.reload()), 60 * 60 * 1000 if iOS  # work around memory leak?
-  
   params = 
     flakes:    200
     speed:     1
@@ -20,6 +17,8 @@ $ ->
     (params[kvp.split('=')[0]] = parseInt kvp.split('=')[1]) for kvp in wls.substring(1).split '&'
   else
     window.location.replace window.location.href + '?' + ("#{k}=#{v}" for k, v of params).join '&'
+  
+  iOS = navigator.appVersion.match /iPhone|iPad/
   
   snowColour = if params.inv then 0x666666 else 0xffffff
   bgColour = if params.inv then 0xffffff else 0x000011

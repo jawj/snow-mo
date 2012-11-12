@@ -8,12 +8,6 @@
       $('#noWebGL').show();
       return;
     }
-    iOS = navigator.appVersion.match(/iPhone|iPad/);
-    if (iOS) {
-      setTimeout((function() {
-        return window.location.reload();
-      }), 60 * 60 * 1000);
-    }
     params = {
       flakes: 200,
       speed: 1,
@@ -40,6 +34,7 @@
         return _results;
       })()).join('&'));
     }
+    iOS = navigator.appVersion.match(/iPhone|iPad/);
     snowColour = params.inv ? 0x666666 : 0xffffff;
     bgColour = params.inv ? 0xffffff : 0x000011;
     snowMaterial = new THREE.LineBasicMaterial({
