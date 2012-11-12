@@ -397,7 +397,10 @@
       _results = [];
       for (_j = 0, _len1 = meshes.length; _j < _len1; _j++) {
         mesh = meshes[_j];
-        _results.push(scene.remove(mesh));
+        scene.remove(mesh);
+        mesh.deallocate();
+        mesh.geometry.deallocate();
+        _results.push(renderer.deallocateObject(mesh));
       }
       return _results;
     };

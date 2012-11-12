@@ -241,7 +241,11 @@ $ ->
     if intersects.length > 0
       flake = intersects[0].object.flake
       flake.click ev
-    scene.remove mesh for mesh in meshes
+    for mesh in meshes
+      scene.remove mesh  
+      mesh.deallocate()
+      mesh.geometry.deallocate()
+      renderer.deallocateObject mesh
   $(renderer.domElement).on 'click touchend', flakeXpode
   
   doubleTapDetect = (ev) ->
