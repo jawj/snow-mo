@@ -203,6 +203,9 @@
         }
         if (this.line) {
           scene.remove(this.line);
+          this.line.deallocate();
+          this.line.geometry.deallocate();
+          renderer.deallocateObject(this.line);
         }
         this.scale = randInRange(3, 6);
         maxLevel = Math.random() < 0.4 ? 3 : 2;

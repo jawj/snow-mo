@@ -106,7 +106,16 @@ $ ->
     
     constructor: -> @reset()
     reset: (showOrigin = no) ->
-      scene.remove @line if @line  # always need a new object, not just __dirtyVertices = yes, because length may have changed (https://github.com/mrdoob/three.js/wiki/Updates)
+      
+      if @line
+        # we always need a new object, not just __dirtyVertices, as the length may have changed 
+        # see: https://github.com/mrdoob/three.js/wiki/Updates and
+        # and: view-source:http://mrdoob.github.com/three.js/examples/webgl_test_memory.html
+        scene.remove @line  
+        @line.deallocate()
+        @line.geometry.deallocate()
+        renderer.deallocateObject @line
+        
       @scale = randInRange 3, 6
       maxLevel = if Math.random() < 0.4 then 3 else 2
       if Math.random() < 0.5 / params.flakes
