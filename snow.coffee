@@ -160,12 +160,11 @@ $ ->
   renderer.clear()
   
   scene = new THREE.Scene()
-  scene.add camera
   scene.fog = new THREE.FogExp2 bgColour, 0.0028
 
   projector = new THREE.Projector()
   
-  flakes = flakes = for i in [0...params.flakes]
+  flakes = for i in [0...params.flakes]
     flake = new Flake()
     flake.line.position.y = randInRange flake.yRange  # random positioning at start
     flake

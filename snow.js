@@ -279,10 +279,9 @@
     renderer.setClearColorHex(bgColour, 1.0);
     renderer.clear();
     scene = new THREE.Scene();
-    scene.add(camera);
     scene.fog = new THREE.FogExp2(bgColour, 0.0028);
     projector = new THREE.Projector();
-    flakes = flakes = (function() {
+    flakes = (function() {
       var _j, _ref2, _results;
       _results = [];
       for (i = _j = 0, _ref2 = params.flakes; 0 <= _ref2 ? _j < _ref2 : _j > _ref2; i = 0 <= _ref2 ? ++_j : --_j) {
