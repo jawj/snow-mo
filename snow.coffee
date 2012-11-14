@@ -4,6 +4,8 @@ $ ->
     $('#noWebGL').show()
     return
   
+  casaLogoMessage = '[CASA]'
+  
   params = 
     flakes:    200
     speed:     1
@@ -11,10 +13,14 @@ $ ->
     stats:     0
     credits:   1
     inv:       0
+    message:   casaLogoMessage
   
   wls = window.location.search
   if wls.length > 0
-    (params[kvp.split('=')[0]] = parseInt kvp.split('=')[1]) for kvp in wls.substring(1).split '&'
+    for kvp in wls.substring(1).split '&'
+      [k, v] = kvp.split '='
+      v = parseInt v unless k is 'message'
+      params[k] = v
   else
     window.location.replace window.location.href + '?' + ("#{k}=#{v}" for k, v of params).join '&'
   
@@ -100,8 +106,13 @@ $ ->
     xRange: [-150, 150]; yRange: [150, -150]; zRange: [-150, 150]
     explodeSpeed: 0.003
     
-    t = new Transform(); t.translate -16, 22; t.scale 0.5, -0.5  # roughly centre, vertically flip and resize logo
-    logo: verticesFromSVGPaths window.logoSvg, t
+    logo: if params.message is casaLogoMessage
+      t = new Transform(); t.translate -16, 22; t.scale 0.5, -0.5  # roughly centre, vertically flip and resize logo
+      verticesFromSVGPaths window.logoSvg, t 
+    else
+      Spindlytext::latFactor = 1
+      text = decodeURIComponent params.message
+      verticesFromSVGPaths new Spindlytext().text(text, lineSpace: 0).svg()
     
     constructor: -> @reset()
     reset: (showOrigin = no) ->
@@ -149,8 +160,8 @@ $ ->
     click: (ev) ->
       if @rootFrag
         @explodingness = if ev.shiftKey then -1 else 1
-      else
-        window.open 'http://casa.ucl.ac.uk', 'casa' unless iOS
+      else if params.message is casaLogoMessage and not iOS
+        window.open 'http://casa.ucl.ac.uk', 'casa'
 
   dvp = window.devicePixelRatio ? 1
   renderer = new THREE.WebGLRenderer antialias: yes
