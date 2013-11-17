@@ -122,9 +122,9 @@ $ ->
         # see: https://github.com/mrdoob/three.js/wiki/Updates and
         # and: view-source:http://mrdoob.github.com/three.js/examples/webgl_test_memory.html
         scene.remove @line  
-        @line.deallocate()
-        @line.geometry.deallocate()
-        renderer.deallocateObject @line
+        @line.geometry.dispose()
+        # @line.deallocate()
+        # renderer.deallocateObject @line
         
       @scale = randInRange 3, 6
       maxLevel = if Math.random() < 0.4 then 3 else 2
@@ -140,7 +140,7 @@ $ ->
       geom.vertices.push v(-5, 0, 0), v(5, 0, 0), v(0, -5, 0), v(0, 5, 0) if showOrigin  # for debugging
       @line = new THREE.Line geom, snowMaterial, THREE.LinePieces
       @line.position = new THREE.Vector3 randInRange(@xRange), @yRange[0], randInRange(@zRange)
-      @line.rotation = new THREE.Vector3 randInRange(0, twoPi), randInRange(0, twoPi), randInRange(0, twoPi)
+      @line.rotation.set randInRange(0, twoPi), randInRange(0, twoPi), randInRange(0, twoPi)
       @velocity = new THREE.Vector3 randInRange(-0.002, 0.002), randInRange(-0.010, -0.011), randInRange(-0.002, 0.002)
       @rotality = new THREE.Vector3 randInRange(-0.0003, 0.0003), randInRange(-0.0003, 0.0003), randInRange(-0.0003, 0.0003)
       scene.add @line
@@ -149,7 +149,7 @@ $ ->
       pos = @line.position; vel = @velocity
       pos.x += vel.x * dt + wind[0]; pos.y += vel.y * dt; pos.z += vel.z * dt + wind[1]
       rot = @line.rotation; rly = @rotality
-      rot.x += rly.x * dt; rot.y += rly.y * dt; rot.z += rly.z * dt
+      rot.set rot.x + rly.x * dt, rot.y + rly.y * dt, rot.z + rly.z * dt
       # could use Vector3 add/clone/multiplyScalar methods -- but the above is probably faster
       if @rootFrag and @explodingness isnt 0
         @explodedness += @explodingness * @explodeSpeed * dt
@@ -175,13 +175,14 @@ $ ->
   setSize()
   
   document.body.appendChild renderer.domElement
-  renderer.setClearColorHex bgColour, 1.0
+  renderer.setClearColor bgColour, 1
   renderer.clear()
   
   scene = new THREE.Scene()
   scene.fog = new THREE.FogExp2 bgColour, 0.0028
 
   projector = new THREE.Projector()
+  caster = new THREE.Raycaster()
   
   flakes = for i in [0...params.flakes]
     flake = new Flake()
@@ -190,10 +191,9 @@ $ ->
   
   paused = down = moved = no
   sx = sy = windSpeed = lastTapTime = 0
-  last = new Date().getTime()
   camZRange = [300, 50]
   camZ = camZRange[0]
-  origCamZoom = null  # for scope
+  last = origCamZoom = null  # for scope
   camT = new Transform()
   windT = new Transform()
   windT.rotate -halfPi
@@ -203,10 +203,10 @@ $ ->
   updateCamPos = -> [camera.position.x, camera.position.z] = camT.t 0, camZ
   
   animate = (t) ->
-    dt = (t - last) * speed
+    dt = if last? then (t - last) * speed else 0
     dt = 30 if dt > 1000  # e.g. if someone switched away and then back to this tab
     wind = windT.t 0, windSpeed
-    if not paused
+    unless paused
       flake.tick dt, wind for flake in flakes
     renderer.clear()
     camera.lookAt scene.position
@@ -216,7 +216,7 @@ $ ->
     stats.update() if params.stats
   
   updateCamPos()
-  animate new Date().getTime()
+  window.requestAnimationFrame animate, renderer.domElement
   
   $(window).on 'resize', setSize
   
@@ -238,7 +238,8 @@ $ ->
     eventY = ev.clientY || ev.originalEvent.touches[0].clientY
     vector = new THREE.Vector3 (eventX / window.innerWidth) * 2 - 1, - (eventY / window.innerHeight) * 2 + 1, 0.5
     projector.unprojectVector vector, camera
-    ray = new THREE.Ray camera.position, vector.subSelf(camera.position).normalize()
+    direction = vector.sub(camera.position).normalize()
+    
     meshes = for flake in flakes
       mesh = new THREE.Mesh(new THREE.PlaneGeometry(flake.size, flake.size), meshMaterial)
       mesh.position = flake.line.position
@@ -247,15 +248,18 @@ $ ->
       scene.add mesh
       mesh
     scene.updateMatrixWorld()
-    intersects = ray.intersectObjects meshes
+    
+    caster.set camera.position, direction
+    intersects = caster.intersectObjects meshes
+
     if intersects.length > 0
       flake = intersects[0].object.flake
       flake.click ev
     for mesh in meshes
-      scene.remove mesh  
-      mesh.deallocate()
-      mesh.geometry.deallocate()
-      renderer.deallocateObject mesh
+      scene.remove mesh
+      mesh.geometry.dispose()
+      # mesh.deallocate()
+      # renderer.deallocateObject mesh
   $(renderer.domElement).on 'click touchend', flakeXpode
   
   doubleTapDetect = (ev) ->
