@@ -3,7 +3,6 @@ $ ->
     # no point testing for plain 'webgl' context, because Three.js doesn't
     $('#noWebGL').show()
     return
-  
   casaLogoMessage = '[CASA]'
   
   params = 
@@ -136,14 +135,15 @@ $ ->
         @size = 0.67 * @scale * (maxLevel + 1) * 2  # 0.67 is a best guess -- reflecting that flakes won't generally fill their bounds
       @explodingness = @explodedness = 0
       geom = new THREE.Geometry()
+      geom.dynamic = yes
       geom.vertices = if @rootFrag then @rootFrag.vertices @scale else @logo
       geom.vertices.push v(-5, 0, 0), v(5, 0, 0), v(0, -5, 0), v(0, 5, 0) if showOrigin  # for debugging
-      @line = new THREE.Line geom, snowMaterial, THREE.LinePieces
-      @line.position = new THREE.Vector3 randInRange(@xRange), @yRange[0], randInRange(@zRange)
+      @line = new THREE.LineSegments geom, snowMaterial
       @line.rotation.set randInRange(0, twoPi), randInRange(0, twoPi), randInRange(0, twoPi)
       @velocity = new THREE.Vector3 randInRange(-0.002, 0.002), randInRange(-0.010, -0.011), randInRange(-0.002, 0.002)
       @rotality = new THREE.Vector3 randInRange(-0.0003, 0.0003), randInRange(-0.0003, 0.0003), randInRange(-0.0003, 0.0003)
-      scene.add @line
+      @line.position.set randInRange(@xRange), @yRange[0], randInRange(@zRange)
+      scene.add @line  
     
     tick: (dt, wind) ->
       pos = @line.position; vel = @velocity
@@ -166,6 +166,7 @@ $ ->
   dvp = window.devicePixelRatio ? 1
   renderer = new THREE.WebGLRenderer antialias: yes
   camera = new THREE.PerspectiveCamera 33, 1, 1, 10000  # aspect (2nd param) shortly to be overridden...
+
   setSize = ->
     renderer.setSize window.innerWidth * dvp, window.innerHeight * dvp
     renderer.domElement.style.width = window.innerWidth + 'px'
@@ -181,7 +182,6 @@ $ ->
   scene = new THREE.Scene()
   scene.fog = new THREE.FogExp2 bgColour, 0.0028
 
-  projector = new THREE.Projector()
   caster = new THREE.Raycaster()
   
   flakes = for i in [0...params.flakes]
@@ -236,20 +236,18 @@ $ ->
     return if moved > 3  # number of mousemove events, threshold for deciding user meant to drag not click
     eventX = ev.clientX || ev.originalEvent.touches[0].clientX
     eventY = ev.clientY || ev.originalEvent.touches[0].clientY
-    vector = new THREE.Vector3 (eventX / window.innerWidth) * 2 - 1, - (eventY / window.innerHeight) * 2 + 1, 0.5
-    projector.unprojectVector vector, camera
-    direction = vector.sub(camera.position).normalize()
-    
+
     meshes = for flake in flakes
       mesh = new THREE.Mesh(new THREE.PlaneGeometry(flake.size, flake.size), meshMaterial)
-      mesh.position = flake.line.position
+      mesh.position.copy flake.line.position
       mesh.rotation = flake.line.rotation
       mesh.flake = flake  # for later reference
       scene.add mesh
       mesh
     scene.updateMatrixWorld()
     
-    caster.set camera.position, direction
+    vector = new THREE.Vector2 (eventX / window.innerWidth) * 2 - 1, - (eventY / window.innerHeight) * 2 + 1
+    caster.setFromCamera vector, camera
     intersects = caster.intersectObjects meshes
 
     if intersects.length > 0
@@ -258,8 +256,7 @@ $ ->
     for mesh in meshes
       scene.remove mesh
       mesh.geometry.dispose()
-      # mesh.deallocate()
-      # renderer.deallocateObject mesh
+
   $(renderer.domElement).on 'click touchend', flakeXpode
   
   doubleTapDetect = (ev) ->
