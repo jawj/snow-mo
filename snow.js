@@ -2,7 +2,7 @@
 var slice = [].slice;
 
 $(function() {
-  var Flake, FlakeFrag, animate, bgColour, camT, camZ, camZRange, camera, casaLogoMessage, caster, doCamPan, doCamZoom, doubleTapDetect, down, dvp, explodeAll, flake, flakeXpode, flakes, halfPi, i, iOS, k, kvp, l, last, lastTapTime, len, maxSpeedMultiplier, meshMaterial, moved, oneThirdPi, origCamZoom, params, paused, piOver180, randInRange, ref, ref1, ref2, renderer, scene, setSize, snowColour, snowMaterial, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, wls;
+  var Flake, FlakeFrag, WebVRConfig, animate, bgColour, camT, camZ, camZRange, camera, casaLogoMessage, caster, controls, doCamPan, doCamZoom, doubleTapDetect, down, dvp, effect, explodeAll, flake, flakeXpode, flakes, halfPi, i, iOS, k, kvp, l, last, lastTapTime, len, manager, maxSpeedMultiplier, meshMaterial, moved, oneThirdPi, origCamZoom, params, paused, piOver180, randInRange, ref, ref1, ref2, renderer, scene, setSize, snowColour, snowMaterial, speed, startCamPan, startCamZoom, stats, stopCamPan, sx, sy, togglePause, toggleSpeed, twoPi, updateCamPos, v, verticesFromSVGPaths, windChange, windSpeed, windT, wls;
   if (!(window.WebGLRenderingContext && document.createElement('canvas').getContext('experimental-webgl'))) {
     $('#noWebGL').show();
     return;
@@ -61,6 +61,9 @@ $(function() {
     stats.domElement.id = 'stats';
     document.body.appendChild(stats.domElement);
   }
+  WebVRConfig = {
+    BUFFER_SCALE: 2.0
+  };
   Transform.prototype.t = Transform.prototype.transformPoint;
   twoPi = Math.PI * 2;
   halfPi = Math.PI / 2;
@@ -271,6 +274,11 @@ $(function() {
   document.body.appendChild(renderer.domElement);
   renderer.setClearColor(bgColour, 1);
   renderer.clear();
+  controls = new THREE.VRControls(camera);
+  controls.standing = true;
+  effect = new THREE.VREffect(renderer);
+  effect.setSize(window.innerWidth, window.innerHeight);
+  manager = new WebVRManager(renderer, effect, params);
   scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(bgColour, 0.0028);
   caster = new THREE.Raycaster();
@@ -311,9 +319,9 @@ $(function() {
         flake.tick(dt, wind);
       }
     }
-    renderer.clear();
-    camera.lookAt(scene.position);
-    renderer.render(scene, camera);
+    controls.update();
+    manager.render(scene, camera, t);
+    effect.render(scene, camera);
     last = t;
     window.requestAnimationFrame(animate, renderer.domElement);
     if (params.stats) {

@@ -38,6 +38,9 @@ $ ->
     stats.domElement.id = 'stats'
     document.body.appendChild stats.domElement
   
+  WebVRConfig =
+    BUFFER_SCALE: 2.0
+
   # shortcuts
   Transform::t = Transform::transformPoint
   twoPi = Math.PI * 2
@@ -178,6 +181,12 @@ $ ->
   document.body.appendChild renderer.domElement
   renderer.setClearColor bgColour, 1
   renderer.clear()
+
+  controls = new THREE.VRControls camera
+  controls.standing = yes
+  effect = new THREE.VREffect renderer
+  effect.setSize window.innerWidth, window.innerHeight
+  manager = new WebVRManager renderer, effect, params
   
   scene = new THREE.Scene()
   scene.fog = new THREE.FogExp2 bgColour, 0.0028
@@ -208,9 +217,14 @@ $ ->
     wind = windT.t 0, windSpeed
     unless paused
       flake.tick dt, wind for flake in flakes
-    renderer.clear()
-    camera.lookAt scene.position
-    renderer.render scene, camera
+    #renderer.clear()
+    #camera.lookAt scene.position
+    #renderer.render scene, camera
+
+    controls.update()
+    manager.render scene, camera, t
+    effect.render scene, camera
+
     last = t
     window.requestAnimationFrame animate, renderer.domElement
     stats.update() if params.stats
